@@ -2,6 +2,8 @@ package org.homemade;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+
 
 public class Utils {
 
@@ -10,7 +12,7 @@ public class Utils {
         System.out.println("("+callerClassName+") "+obj.toString());
     }
 
-    public static void saveData(ArrayList<Object> object, String filePath){
+    public static void saveData(HashMap<String, Object> object, String filePath){
         try {
             File file = new File(filePath);
             file.createNewFile();

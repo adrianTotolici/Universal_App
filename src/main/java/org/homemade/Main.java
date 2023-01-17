@@ -10,8 +10,9 @@ public class Main {
 
     public static void main(String[] args) {
         window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        window.setSize(Constants.WINDOW_SIZE);
+        window.setExtendedState(JFrame.MAXIMIZED_BOTH);
         window.setName(DefaultLang.windowName);
+        window.setUndecorated(false);
         window.setVisible(true);
         MainGuiLogic.getInstance(window).init();
     }
