@@ -23,7 +23,6 @@ public class GuiStockLogic {
     private JButton removeButton;
     private JTextField divTextFiled;
     private JTextField ownShareTextField;
-    private JTextField sectorTextField;
     private JTextField industryTextField;
     private JTextField investmentTextField;
     private JButton editFromButton;
@@ -34,10 +33,12 @@ public class GuiStockLogic {
     private JLabel investmentLabel;
     private JLabel sectorLabel;
     private JLabel industryLabel;
-    private JRadioButton subtractRadioButton;
+    private JComboBox sectorComboBox;
+    private JComboBox industrycomboBox;
 
     public GuiStockLogic(JFrame jFrame) {
         this.jFrame = jFrame;
+        initEditPanel();
     }
 
     public static GuiStockLogic getInstance(JFrame frame){
@@ -88,7 +89,8 @@ public class GuiStockLogic {
             row[3] = "$ "+stockBlob.getDivPerQ();
             row[4] = stockBlob.getOwnShares();
             row[5] = "$ "+stockBlob.getOwnShares()*stockBlob.getDivPerQ();
-            row[6] = stockBlob.getOwnShares()*stockBlob.getDivPerQ() + " Lei";
+            double profit= stockBlob.getOwnShares() * stockBlob.getDivPerQ() * Logic.getInstance().getExchangeRateRon();
+            row[6] = Constants.currencyFormat.format(profit)+" Lei";
             model.addRow(row);
         }
     }
@@ -107,7 +109,7 @@ public class GuiStockLogic {
             if (!(newStockField.getText().isBlank() || newStockField.getText().isEmpty())){
                 Utils.Log("Update stock "+newStockField.getText().toUpperCase());
                 Stock_blob stockBlob = Logic.getInstance().getAddedStock(newStockField.getText().toUpperCase());
-                initEditPanel(stockBlob);
+                populateEditPanel(stockBlob);
             }else{
                 int selectedRow = stockTable.getSelectedRow();
                 String valueAt = (String) stockTable.getModel().getValueAt(selectedRow, 0);
@@ -115,13 +117,28 @@ public class GuiStockLogic {
                 if (stockBlob != null) {
                     Utils.Log("Update stock "+ stockBlob.getSymbol());
                     stockTable.clearSelection();
-                    initEditPanel(stockBlob);
+                    populateEditPanel(stockBlob);
                 }else {
                     Utils.Log("Stock selected "+ valueAt+" doesn't exist in memory.");
                     stockTable.clearSelection();
                 }
             }
+            updateStockTable();
 
+        });
+
+        removeButton.addActionListener(e -> {
+            Utils.Log("Remove selected stock.");
+            if (!(newStockField.getText().isBlank() || newStockField.getText().isEmpty())){
+                Utils.Log("Remove stock "+newStockField.getText().toUpperCase());
+                Logic.getInstance().removeStock(newStockField.getText().toUpperCase());
+            }else{
+                int selectedRow = stockTable.getSelectedRow();
+                String valueAt = (String) stockTable.getModel().getValueAt(selectedRow, 0);
+                Logic.getInstance().removeStock(valueAt);
+                stockTable.clearSelection();
+            }
+            updateStockTable();
         });
 
         newStockField.addKeyListener(new KeyAdapter() {
@@ -154,41 +171,61 @@ public class GuiStockLogic {
         });
     }
 
-    public void initEditPanel(@NotNull Stock_blob stockBlob){
+    public void initEditPanel(){
+        divLabel.setText(DefaultLang.dividendLabel);
+        ownShareLabel.setText(DefaultLang.ownShareLabel);
+        sectorLabel.setText(DefaultLang.sectorLabel);
+        industryLabel.setText(DefaultLang.industryLabel);
+        investmentLabel.setText(DefaultLang.investmentLabel);
+        editFromButton.setText(DefaultLang.saveEditStockButtonText);
+        for (int i = 0; i< Constants.sectorComboBoxList.length; i++) {
+            sectorComboBox.addItem(Constants.sectorComboBoxList[i]);
+        }
+    }
+
+    public void populateEditPanel(@NotNull Stock_blob stockBlob){
         Utils.Log("Load stock to be edited in Edit Form.");
         editStockPanel.setVisible(true);
         stockLabel.setText(stockBlob.getSymbol());
-        divLabel.setText(DefaultLang.dividendLabel);
         divTextFiled.setText(String.valueOf(stockBlob.getDivPerQ()));
-        ownShareLabel.setText(DefaultLang.ownShareLabel);
         ownShareTextField.setText(String.valueOf(stockBlob.getOwnShares()));
-        sectorLabel.setText(DefaultLang.sectorLabel);
-        sectorTextField.setText(stockBlob.getSector());
-        industryLabel.setText(DefaultLang.industryLabel);
+        sectorComboBox.setSelectedItem(stockBlob.getSector());
         industryTextField.setText(stockBlob.getIndustry());
-        investmentLabel.setText(DefaultLang.investmentLabel);
         investmentTextField.setText(String.valueOf(stockBlob.getInvestment()));
 
-        subtractRadioButton.setText(DefaultLang.subtractStock);
         editFromButton.setText(DefaultLang.saveEditStockButtonText);
 
         editFromButton.addActionListener(e -> {
             Utils.Log("Save new data for current Stock");
             double divPerQ = Double.parseDouble(divTextFiled.getText());
-            double ownShares = Double.parseDouble(ownShareTextField.getText());
-            String sector = sectorTextField.getText();
-            String industry = industryTextField.getText();
-            double investment = Double.parseDouble(investmentTextField.getText());
-
             stockBlob.setDivPerQ(divPerQ);
-            stockBlob.setOwnShares(ownShares);
+
+            if (!(ownShareTextField.getText().isEmpty() || ownShareTextField.getText().isBlank())) {
+                double ownShares = Double.parseDouble(ownShareTextField.getText());
+                stockBlob.setOwnShares(ownShares);
+            }
+
+            String sector = (String) sectorComboBox.getModel().getSelectedItem();
             stockBlob.setSector(sector);
+
+            String industry = industryTextField.getText();
             stockBlob.setIndustry(industry);
+
+            double investment = Double.parseDouble(investmentTextField.getText());
             stockBlob.setInvestment(investment);
 
             Logic.getInstance().updateStock(stockBlob);
             updateStockTable();
+            resetEditPanel();
             editStockPanel.setVisible(false);
         });
+    }
+
+    public void resetEditPanel(){
+        divTextFiled.setText("");
+        ownShareTextField.setText("");
+        sectorComboBox.setSelectedItem(Constants.sectorComboBoxList[0]);
+        industryTextField.setText("");
+        investmentTextField.setText("");
     }
 }
