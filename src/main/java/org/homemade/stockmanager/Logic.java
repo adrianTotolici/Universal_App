@@ -33,6 +33,7 @@ public class Logic {
 
     private void init(){
         exchangeRateRon = getExchangeRate("RON");
+
         try {
             Path stockFilePath = Path.of(Constants.stockFilePath);
             if  ( ! Files.exists(stockFilePath)) {
@@ -70,6 +71,7 @@ public class Logic {
         }
     }
 
+    @SuppressWarnings (value="unchecked")
     public HashMap<String, Stock_blob> loadStockData() {
         HashMap<String, Stock_blob> stockBlobs = new HashMap<>();
         try {
@@ -107,14 +109,26 @@ public class Logic {
     }
 
     public void updateStock(Stock_blob stockBlob){
-        Stock_blob old_stock = (Stock_blob) stockList.get(stockBlob.getSymbol());
+        Stock_blob old_stock;
+        if (stockList.get(stockBlob.getSymbol()) == null) {
+            old_stock = new Stock_blob();
+        }else {
+            old_stock = (Stock_blob) stockList.get(stockBlob.getSymbol());
+        }
+
         old_stock.setIndustry(stockBlob.getIndustry());
         old_stock.setDivPerQ(stockBlob.getDivPerQ());
         old_stock.setOwnShares(stockBlob.getOwnShares());
         old_stock.setInvestment(stockBlob.getInvestment());
         old_stock.setSector(stockBlob.getSector());
+        old_stock.setPayData(stockBlob.getPayData());
 
-        stockList.replace(stockBlob.getSymbol(), old_stock);
+        if (stockList.get(stockBlob.getSymbol()) != null) {
+            stockList.replace(stockBlob.getSymbol(), old_stock);
+        }else {
+            stockList.put(stockBlob.getSymbol(), old_stock);
+        }
+
         Utils.saveData(stockList, Constants.stockFilePath);
         Utils.Log("The Object  was successfully written to a file");
 
@@ -136,7 +150,7 @@ public class Logic {
             // Read the API response
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
-            StringBuffer content = new StringBuffer();
+            StringBuilder content = new StringBuilder();
             while ((inputLine = in.readLine()) != null) {
                 content.append(inputLine);
             }

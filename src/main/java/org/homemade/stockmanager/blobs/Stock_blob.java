@@ -1,10 +1,13 @@
 package org.homemade.stockmanager.blobs;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Date;
 
 public class Stock_blob implements Serializable {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private String symbol;
@@ -15,6 +18,7 @@ public class Stock_blob implements Serializable {
     private double divPerQ;
     private double ownShares;
     private double investment;
+    private Date payData;
 
     public Stock_blob(){}
 
@@ -82,7 +86,11 @@ public class Stock_blob implements Serializable {
         this.industry = industry;
     }
 
-    public void setValue(double value) {
-        this.value = value;
+    public Date getPayData() {
+        return payData;
+    }
+
+    public void setPayData(Date payData) {
+        this.payData = payData;
     }
 }

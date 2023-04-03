@@ -23,7 +23,6 @@ public class GuiStockLogic {
     private JButton removeButton;
     private JTextField divTextFiled;
     private JTextField ownShareTextField;
-    private JTextField industryTextField;
     private JTextField investmentTextField;
     private JButton editFromButton;
     private JPanel editStockPanel;
@@ -34,7 +33,9 @@ public class GuiStockLogic {
     private JLabel sectorLabel;
     private JLabel industryLabel;
     private JComboBox sectorComboBox;
-    private JComboBox industrycomboBox;
+    private JComboBox industryComboBox;
+    private JLabel payDateLabel;
+    private JTextField payDateText;
 
     public GuiStockLogic(JFrame jFrame) {
         this.jFrame = jFrame;
@@ -83,14 +84,22 @@ public class GuiStockLogic {
 
         for (String key : stockBlobs.keySet()) {
             Stock_blob stockBlob = stockBlobs.get(key);
+            double investmentDollar = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateRon();
+            double profitDollar = stockBlob.getOwnShares()*stockBlob.getDivPerQ();
+
+            double taxDollar = (profitDollar*Constants.USAIncomeTax) /100;
+
+            double profitRON= ((stockBlob.getOwnShares() * stockBlob.getDivPerQ())-taxDollar) * Logic.getInstance().getExchangeRateRon();
+
             row[0] = stockBlob.getSymbol();
             row[1] = stockBlob.getName();
             row[2] = "$ "+stockBlob.getValue();
             row[3] = "$ "+stockBlob.getDivPerQ();
             row[4] = stockBlob.getOwnShares();
-            row[5] = "$ "+stockBlob.getOwnShares()*stockBlob.getDivPerQ();
-            double profit= stockBlob.getOwnShares() * stockBlob.getDivPerQ() * Logic.getInstance().getExchangeRateRon();
-            row[6] = Constants.currencyFormat.format(profit)+" Lei";
+            row[5] = "$ "+Constants.currencyFormat.format(investmentDollar);
+            row[6] = "$ "+ Constants.currencyFormat.format(profitDollar-taxDollar);
+            row[7] = "$ "+ Constants.currencyFormat.format(taxDollar);
+            row[8] = Constants.currencyFormat.format(profitRON)+" RON";
             model.addRow(row);
         }
     }
@@ -181,6 +190,7 @@ public class GuiStockLogic {
         for (int i = 0; i< Constants.sectorComboBoxList.length; i++) {
             sectorComboBox.addItem(Constants.sectorComboBoxList[i]);
         }
+        payDateLabel.setText(DefaultLang.payDateLabel);
     }
 
     public void populateEditPanel(@NotNull Stock_blob stockBlob){
@@ -190,8 +200,16 @@ public class GuiStockLogic {
         divTextFiled.setText(String.valueOf(stockBlob.getDivPerQ()));
         ownShareTextField.setText(String.valueOf(stockBlob.getOwnShares()));
         sectorComboBox.setSelectedItem(stockBlob.getSector());
-        industryTextField.setText(stockBlob.getIndustry());
         investmentTextField.setText(String.valueOf(stockBlob.getInvestment()));
+        industryComboBox.removeAllItems();
+
+        if (Constants.industryComboBoxList.get(sectorComboBox.getModel().getSelectedItem()) !=null) {
+            String[] industryListSaved = Constants.industryComboBoxList.get(sectorComboBox.getModel().getSelectedItem());
+            for (String s : industryListSaved) {
+                industryComboBox.addItem(s);
+            }
+            industryComboBox.setSelectedItem(stockBlob.getIndustry());
+        }
 
         editFromButton.setText(DefaultLang.saveEditStockButtonText);
 
@@ -208,7 +226,7 @@ public class GuiStockLogic {
             String sector = (String) sectorComboBox.getModel().getSelectedItem();
             stockBlob.setSector(sector);
 
-            String industry = industryTextField.getText();
+            String industry = (String) industryComboBox.getModel().getSelectedItem();
             stockBlob.setIndustry(industry);
 
             double investment = Double.parseDouble(investmentTextField.getText());
@@ -219,13 +237,23 @@ public class GuiStockLogic {
             resetEditPanel();
             editStockPanel.setVisible(false);
         });
+
+        sectorComboBox.addItemListener(e -> {
+            Utils.Log("Item changed");
+            industryComboBox.removeAllItems();
+            String[] industryList = Constants.industryComboBoxList.get(sectorComboBox.getModel().getSelectedItem());
+            for (String s : industryList) {
+                industryComboBox.addItem(s);
+            }
+        });
     }
 
     public void resetEditPanel(){
         divTextFiled.setText("");
         ownShareTextField.setText("");
-        sectorComboBox.setSelectedItem(Constants.sectorComboBoxList[0]);
-        industryTextField.setText("");
         investmentTextField.setText("");
+        industryComboBox.removeAllItems();
     }
 }
+
+
