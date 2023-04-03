@@ -22,12 +22,11 @@ public class Logic {
     public static Logic getInstance(){
         if (instance == null) {
             instance = new Logic();
-
         }
         return instance;
     }
 
-    public Logic(){
+    private Logic(){
         init();
     }
 
@@ -162,7 +161,7 @@ public class Logic {
             double exchangeRate = rates.getDouble(currency);
 
             // Print the exchange rate
-            System.out.println("Exchange rate for " + currency + ": " + exchangeRate);
+            Utils.Log("Exchange rate for " + currency + ": " + exchangeRate);
 
             return exchangeRate;
         } catch (IOException e) {
