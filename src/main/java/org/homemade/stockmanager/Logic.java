@@ -8,8 +8,6 @@ import yahoofinance.YahooFinance;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +17,7 @@ public class Logic {
 
     private static Logic instance;
     private HashMap<String, Object> stockList = new HashMap<>();
+    private double exchangeRateRon;
 
     public static Logic getInstance(){
         if (instance == null) {
@@ -33,6 +32,8 @@ public class Logic {
     }
 
     private void init(){
+        exchangeRateRon = getExchangeRate("RON");
+
         try {
             Path stockFilePath = Path.of(Constants.stockFilePath);
             if  ( ! Files.exists(stockFilePath)) {
@@ -42,8 +43,10 @@ public class Logic {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
 
-        getExchangeRate();
+    public double getExchangeRateRon() {
+        return exchangeRateRon;
     }
 
     public void getStock(String name){
@@ -68,6 +71,7 @@ public class Logic {
         }
     }
 
+    @SuppressWarnings (value="unchecked")
     public HashMap<String, Stock_blob> loadStockData() {
         HashMap<String, Stock_blob> stockBlobs = new HashMap<>();
         try {
@@ -97,26 +101,42 @@ public class Logic {
         }
     }
 
+    public void removeStock(String symbol){
+        if (stockList.containsKey(symbol)){
+            stockList.remove(symbol);
+            Utils.saveData(stockList, Constants.stockFilePath);
+        }
+    }
+
     public void updateStock(Stock_blob stockBlob){
-        Stock_blob old_stock = (Stock_blob) stockList.get(stockBlob.getSymbol());
+        Stock_blob old_stock;
+        if (stockList.get(stockBlob.getSymbol()) == null) {
+            old_stock = new Stock_blob();
+        }else {
+            old_stock = (Stock_blob) stockList.get(stockBlob.getSymbol());
+        }
+
         old_stock.setIndustry(stockBlob.getIndustry());
         old_stock.setDivPerQ(stockBlob.getDivPerQ());
         old_stock.setOwnShares(stockBlob.getOwnShares());
         old_stock.setInvestment(stockBlob.getInvestment());
         old_stock.setSector(stockBlob.getSector());
+        old_stock.setPayData(stockBlob.getPayData());
 
-        stockList.replace(stockBlob.getSymbol(), old_stock);
+        if (stockList.get(stockBlob.getSymbol()) != null) {
+            stockList.replace(stockBlob.getSymbol(), old_stock);
+        }else {
+            stockList.put(stockBlob.getSymbol(), old_stock);
+        }
+
         Utils.saveData(stockList, Constants.stockFilePath);
         Utils.Log("The Object  was successfully written to a file");
 
     }
 
-        public void getExchangeRate() {
+    public double getExchangeRate(String currency) {
 
         try {
-            // The currency code you want to get the exchange rate for (e.g. "USD", "EUR", etc.)
-            String currencyCode = "RON";
-
             // Your Open Exchange Rates app_id
             String appId = "4207fe17e2564aebb5f1627b5928f877";
 
@@ -130,7 +150,7 @@ public class Logic {
             // Read the API response
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
-            StringBuffer content = new StringBuffer();
+            StringBuilder content = new StringBuilder();
             while ((inputLine = in.readLine()) != null) {
                 content.append(inputLine);
             }
@@ -139,19 +159,15 @@ public class Logic {
             // Parse the JSON response
             JSONObject json = new JSONObject(content.toString());
             JSONObject rates = json.getJSONObject("rates");
-            double exchangeRate = rates.getDouble(currencyCode);
+            double exchangeRate = rates.getDouble(currency);
 
             // Print the exchange rate
-            System.out.println("Exchange rate for " + currencyCode + ": " + exchangeRate);
-        } catch (ProtocolException e) {
-            throw new RuntimeException(e);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
+            System.out.println("Exchange rate for " + currency + ": " + exchangeRate);
+
+            return exchangeRate;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-
-        }
+    }
 
 }
