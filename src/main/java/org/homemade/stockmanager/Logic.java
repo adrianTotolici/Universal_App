@@ -87,7 +87,7 @@ public class Logic {
             fi.close();
 
         } catch (IOException | ClassNotFoundException e) {
-            System.out.print("df");
+            Utils.Log("Something went wrong with FileInputStream variable.");
         }
         return stockBlobs;
     }
