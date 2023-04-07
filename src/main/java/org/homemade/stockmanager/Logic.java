@@ -13,6 +13,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Row;
+
 public class Logic {
 
     private static Logic instance;
@@ -42,6 +51,8 @@ public class Logic {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        readXLSX("test");
     }
 
     public double getExchangeRateRon() {
@@ -169,4 +180,34 @@ public class Logic {
         }
     }
 
+    public void readXLSX(String xlsxPath) {
+        try {
+            FileInputStream fileInputStream = new FileInputStream(new File("Dividende.xlsx"));
+            XSSFWorkbook  workBook = new XSSFWorkbook (fileInputStream);
+            XSSFSheet sheet = workBook.getSheetAt(4);
+            //evaluating cell type
+            FormulaEvaluator formulaEvaluator = workBook.getCreationHelper().createFormulaEvaluator();
+            for (Row row : sheet)     //iteration over row using for each loop
+            {
+                for (Cell cell : row)    //iteration over cell using for each loop
+                {
+                    switch (formulaEvaluator.evaluateInCell(cell).getCellType()) {
+                        //case Cell.CELL_TYPE_NUMERIC:   //field that represents numeric cell type
+                        case NUMERIC:   //field that represents numeric cell type
+                            //getting the value of the cell as a number
+                            System.out.print(cell.getNumericCellValue() + "\t\t");
+                            break;
+                        case STRING:    //field that represents string cell type
+                            //getting the value of the cell as a string
+                            System.out.print(cell.getStringCellValue() + "\t\t");
+                            break;
+
+                    }
+                }
+                System.out.println();
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
