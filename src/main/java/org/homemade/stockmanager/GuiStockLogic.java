@@ -1,5 +1,6 @@
 package org.homemade.stockmanager;
 
+import jdk.jshell.execution.Util;
 import org.homemade.Utils;
 import org.homemade.main.MainGuiLogic;
 import org.homemade.stockmanager.blobs.Stock_blob;
@@ -36,6 +37,8 @@ public class GuiStockLogic {
     private JComboBox industryComboBox;
     private JLabel payDateLabel;
     private JTextField payDateText;
+    private JButton importData;
+    private JButton removeAll;
 
     public GuiStockLogic(JFrame jFrame) {
         this.jFrame = jFrame;
@@ -52,8 +55,10 @@ public class GuiStockLogic {
 
     private void showStockPanel(){
         exitButton.setText(DefaultLang.exitButtonText);
+        importData.setText(DefaultLang.importDataButtonText);
         editButton.setText(DefaultLang.editButtonText);
         removeButton.setText(DefaultLang.removeButtonText);
+        removeAll.setText(DefaultLang.removeAllButtonText);
 
         stockPanel.setVisible(true);
 
@@ -113,6 +118,12 @@ public class GuiStockLogic {
             MainGuiLogic.getInstance(jFrame).init();
         });
 
+        importData.addActionListener( e -> {
+            Utils.Log("Import XLSX form Google drive.");
+            Logic.getInstance().readXLSX("test");
+            updateStockTable();
+        });
+
         editButton.addActionListener(e -> {
             Utils.Log("Edit selected stock.");
             if (!(newStockField.getText().isBlank() || newStockField.getText().isEmpty())){
@@ -147,6 +158,12 @@ public class GuiStockLogic {
                 Logic.getInstance().removeStock(valueAt);
                 stockTable.clearSelection();
             }
+            updateStockTable();
+        });
+
+        removeAll.addActionListener(e -> {
+            Utils.Log("Remove all added stock !");
+            Logic.getInstance().removeAllStock();
             updateStockTable();
         });
 

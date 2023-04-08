@@ -1,5 +1,6 @@
 package org.homemade.stockmanager;
 
+import org.apache.poi.ss.usermodel.Cell;
 import org.homemade.Utils;
 import org.homemade.stockmanager.blobs.Stock_blob;
 import org.json.JSONObject;
@@ -13,13 +14,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 
 public class Logic {
@@ -52,7 +50,6 @@ public class Logic {
             throw new RuntimeException(e);
         }
 
-        readXLSX("test");
     }
 
     public double getExchangeRateRon() {
@@ -181,33 +178,80 @@ public class Logic {
     }
 
     public void readXLSX(String xlsxPath) {
-        try {
-            FileInputStream fileInputStream = new FileInputStream(new File("Dividende.xlsx"));
-            XSSFWorkbook  workBook = new XSSFWorkbook (fileInputStream);
-            XSSFSheet sheet = workBook.getSheetAt(4);
-            //evaluating cell type
-            FormulaEvaluator formulaEvaluator = workBook.getCreationHelper().createFormulaEvaluator();
-            for (Row row : sheet)     //iteration over row using for each loop
-            {
-                for (Cell cell : row)    //iteration over cell using for each loop
-                {
-                    switch (formulaEvaluator.evaluateInCell(cell).getCellType()) {
-                        //case Cell.CELL_TYPE_NUMERIC:   //field that represents numeric cell type
-                        case NUMERIC:   //field that represents numeric cell type
-                            //getting the value of the cell as a number
-                            System.out.print(cell.getNumericCellValue() + "\t\t");
-                            break;
-                        case STRING:    //field that represents string cell type
-                            //getting the value of the cell as a string
-                            System.out.print(cell.getStringCellValue() + "\t\t");
-                            break;
+        int dividendIndexSheet = 4;
+        int shareNameColumnIndex = 1;
+        int shareIndustryColumnIndex = 13;
+        int divPerQColumnIndex = 2;
+        int ownSharesColumnIndex = 8;
+        int investmentColumnIndex = 7;
+        int sectorColumnIndex = 12;
 
+        HashMap<String, String> shareSymbolReplacement = new HashMap<>();
+        shareSymbolReplacement.put("LVMH","MC.PA");
+        shareSymbolReplacement.put("TRIG","TRIG.L");
+        shareSymbolReplacement.put("BSIF","BSIF.L");
+
+        try {
+            FileInputStream fileInputStream = new FileInputStream("Dividende.xlsx");
+            XSSFWorkbook  workBook = new XSSFWorkbook (fileInputStream);
+            XSSFSheet dividendAll = workBook.getSheetAt(dividendIndexSheet);
+            for (Row row : dividendAll) {
+                int rowNum = row.getRowNum();
+                if (rowNum>=2){
+                    String shareSymbol = row.getCell(shareNameColumnIndex).getStringCellValue();
+                    for (String origSymbol : shareSymbolReplacement.keySet()) {
+                        if (shareSymbol.equals(origSymbol)){
+                            shareSymbol = shareSymbolReplacement.get(origSymbol);
+                        }
                     }
+                    getStock(shareSymbol);
+                    String shareIndustry = row.getCell(shareIndustryColumnIndex).getStringCellValue();
+                    double shareDivPerQ = row.getCell(divPerQColumnIndex).getNumericCellValue();
+                    double ownShareNum = row.getCell(ownSharesColumnIndex).getNumericCellValue();
+                    double investment = row.getCell(investmentColumnIndex).getNumericCellValue();
+                    String sector = row.getCell(sectorColumnIndex).getStringCellValue();
+
+                    Stock_blob stockBlob = getAddedStock(shareSymbol);
+                    stockBlob.setIndustry(shareIndustry);
+                    stockBlob.setDivPerQ(shareDivPerQ);
+                    stockBlob.setOwnShares(ownShareNum);
+                    stockBlob.setInvestment(investment);
+                    stockBlob.setSector(sector);
+
+                    updateStock(stockBlob);
                 }
-                System.out.println();
             }
+
+//            XSSFSheet sheet = workBook.getSheetAt(4);
+//            //evaluating cell type
+//            FormulaEvaluator formulaEvaluator = workBook.getCreationHelper().createFormulaEvaluator();
+//            for (Row row : sheet)     //iteration over row using for each loop
+//            {
+//                for (Cell cell : row)    //iteration over cell using for each loop
+//                {
+//                    switch (formulaEvaluator.evaluateInCell(cell).getCellType()) {
+//                        //case Cell.CELL_TYPE_NUMERIC:   //field that represents numeric cell type
+//                        case NUMERIC:   //field that represents numeric cell type
+//                            //getting the value of the cell as a number
+//                            System.out.print(cell.getNumericCellValue() + "\t\t");
+//                            break;
+//                        case STRING:    //field that represents string cell type
+//                            //getting the value of the cell as a string
+//                            System.out.print(cell.getStringCellValue() + "\t\t");
+//                            break;
+//
+//                    }
+//                }
+//                System.out.println();
+//            }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void removeAllStock(){
+        for (String symbol : stockList.keySet()) {
+            removeStock(symbol);
         }
     }
 }
