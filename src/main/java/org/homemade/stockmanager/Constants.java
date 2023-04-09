@@ -6,6 +6,11 @@ import java.util.HashMap;
 public class Constants extends org.homemade.Constants {
 
     public static final int USAIncomeTax = 10;
+    public static final int GBIncomeTax = 0;
+    public static final int ROMIncomeTax = 8;
+    public static final int FRIncomeTax = 25;
+    public static final int IRIncomeTax = 25;
+    public static final int TWIncomeTax = 21;
 
     public static final String stockFilePath = "G:\\My Drive\\Universal App\\stock_file";
 
@@ -28,6 +33,15 @@ public class Constants extends org.homemade.Constants {
     public static final String[] basicMaterialsIndustry = {"Specialty Chemicals"};
     public static final DecimalFormat currencyFormat = new DecimalFormat("#0.00");
     public static final HashMap<String, String[]> industryComboBoxList = initIndustry();
+    public static final HashMap<String, String> shareSymbolReplacement = initSymbolReplacement();
+
+    private static HashMap<String, String> initSymbolReplacement() {
+        HashMap<String, String> shareSymbolReplacement = new HashMap<>();
+        shareSymbolReplacement.put("LVMH", "MC.PA");
+        shareSymbolReplacement.put("TRIG", "TRIG.L");
+        shareSymbolReplacement.put("BSIF", "BSIF.L");
+        return shareSymbolReplacement;
+    }
 
     private static HashMap<String, String[]> initIndustry(){
         HashMap<String, String[]> industry = new HashMap<>();

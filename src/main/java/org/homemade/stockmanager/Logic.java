@@ -1,6 +1,5 @@
 package org.homemade.stockmanager;
 
-import org.apache.poi.ss.usermodel.Cell;
 import org.homemade.Utils;
 import org.homemade.stockmanager.blobs.Stock_blob;
 import org.json.JSONObject;
@@ -8,6 +7,7 @@ import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
@@ -25,6 +25,9 @@ public class Logic {
     private static Logic instance;
     private HashMap<String, Object> stockList = new HashMap<>();
     private double exchangeRateRon;
+    private double exchangeRatePounds;
+    private double exchangeRateEuro;
+    private double exchangeRateCanadianDollar;
 
     public static Logic getInstance(){
         if (instance == null) {
@@ -39,6 +42,9 @@ public class Logic {
 
     private void init(){
         exchangeRateRon = getExchangeRate("RON");
+        exchangeRateEuro = getExchangeRate("EUR");
+        exchangeRatePounds = getExchangeRate("GBP");
+        exchangeRateCanadianDollar = getExchangeRate("CAD");
 
         try {
             Path stockFilePath = Path.of(Constants.stockFilePath);
@@ -54,6 +60,18 @@ public class Logic {
 
     public double getExchangeRateRon() {
         return exchangeRateRon;
+    }
+
+    public  double getExchangeRateEuro(){
+        return exchangeRateEuro;
+    }
+
+    public double getExchangeRatePounds(){
+        return exchangeRatePounds;
+    }
+
+    public double getExchangeRateCanadianDollar(){
+        return exchangeRateCanadianDollar;
     }
 
     public void getStock(String name){
@@ -181,15 +199,12 @@ public class Logic {
         int dividendIndexSheet = 4;
         int shareNameColumnIndex = 1;
         int shareIndustryColumnIndex = 13;
-        int divPerQColumnIndex = 2;
+        int divPerQColumnIndex = 3;
         int ownSharesColumnIndex = 8;
         int investmentColumnIndex = 7;
         int sectorColumnIndex = 12;
 
-        HashMap<String, String> shareSymbolReplacement = new HashMap<>();
-        shareSymbolReplacement.put("LVMH","MC.PA");
-        shareSymbolReplacement.put("TRIG","TRIG.L");
-        shareSymbolReplacement.put("BSIF","BSIF.L");
+        HashMap<String, String> shareSymbolReplacement = Constants.shareSymbolReplacement;
 
         try {
             FileInputStream fileInputStream = new FileInputStream("Dividende.xlsx");
@@ -206,7 +221,7 @@ public class Logic {
                     }
                     getStock(shareSymbol);
                     String shareIndustry = row.getCell(shareIndustryColumnIndex).getStringCellValue();
-                    double shareDivPerQ = row.getCell(divPerQColumnIndex).getNumericCellValue();
+                    double shareDivPerQ = (row.getCell(divPerQColumnIndex).getNumericCellValue())/100;
                     double ownShareNum = row.getCell(ownSharesColumnIndex).getNumericCellValue();
                     double investment = row.getCell(investmentColumnIndex).getNumericCellValue();
                     String sector = row.getCell(sectorColumnIndex).getStringCellValue();
@@ -217,33 +232,15 @@ public class Logic {
                     stockBlob.setOwnShares(ownShareNum);
                     stockBlob.setInvestment(investment);
                     stockBlob.setSector(sector);
+                    switch (shareSymbol){
+                        case "TRIG.L", "BSIF.L" -> {
+                            stockBlob.setValue(BigDecimal.valueOf(stockBlob.getValue()/100));
+                        }
+                    }
 
                     updateStock(stockBlob);
                 }
             }
-
-//            XSSFSheet sheet = workBook.getSheetAt(4);
-//            //evaluating cell type
-//            FormulaEvaluator formulaEvaluator = workBook.getCreationHelper().createFormulaEvaluator();
-//            for (Row row : sheet)     //iteration over row using for each loop
-//            {
-//                for (Cell cell : row)    //iteration over cell using for each loop
-//                {
-//                    switch (formulaEvaluator.evaluateInCell(cell).getCellType()) {
-//                        //case Cell.CELL_TYPE_NUMERIC:   //field that represents numeric cell type
-//                        case NUMERIC:   //field that represents numeric cell type
-//                            //getting the value of the cell as a number
-//                            System.out.print(cell.getNumericCellValue() + "\t\t");
-//                            break;
-//                        case STRING:    //field that represents string cell type
-//                            //getting the value of the cell as a string
-//                            System.out.print(cell.getStringCellValue() + "\t\t");
-//                            break;
-//
-//                    }
-//                }
-//                System.out.println();
-//            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

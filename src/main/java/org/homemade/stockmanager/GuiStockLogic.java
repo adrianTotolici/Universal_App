@@ -1,6 +1,5 @@
 package org.homemade.stockmanager;
 
-import jdk.jshell.execution.Util;
 import org.homemade.Utils;
 import org.homemade.main.MainGuiLogic;
 import org.homemade.stockmanager.blobs.Stock_blob;
@@ -71,6 +70,7 @@ public class GuiStockLogic {
         jFrame.repaint();
     }
 
+    @SuppressWarnings("BoundFieldAssignment")
     private void showStockTable(){
         Object[][] data = new Object[0][0];
         DefaultTableModel tableModel = new DefaultTableModel(data,Constants.columnNamesStockTable);
@@ -87,23 +87,55 @@ public class GuiStockLogic {
         model.setRowCount(0);
         Object[] row = new Object[Constants.columnNamesStockTable.length];
 
+        double investment;
+        double profit;
+        double tax;
+        double profitRON;
+        String currencySymbol;
+
         for (String key : stockBlobs.keySet()) {
+
             Stock_blob stockBlob = stockBlobs.get(key);
-            double investmentDollar = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateRon();
-            double profitDollar = stockBlob.getOwnShares()*stockBlob.getDivPerQ();
 
-            double taxDollar = (profitDollar*Constants.USAIncomeTax) /100;
-
-            double profitRON= ((stockBlob.getOwnShares() * stockBlob.getDivPerQ())-taxDollar) * Logic.getInstance().getExchangeRateRon();
+            switch (stockBlob.getSymbol()) {
+                case "MC.PA" -> {
+                    investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateEuro();
+                    profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
+                    tax = (profit * Constants.FRIncomeTax) / 100;
+                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateEuro();
+                    currencySymbol = "€";
+                }
+                case "TRIG.L", "BSIF.L" -> {
+                    investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRatePounds();
+                    profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
+                    tax = (profit * Constants.GBIncomeTax) / 100;
+                    profitRON = (((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRatePounds())/100;
+                    currencySymbol = "£";
+                }
+                case "ENB" -> {
+                    investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateCanadianDollar();
+                    profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
+                    tax = (profit * Constants.USAIncomeTax) / 100;
+                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateCanadianDollar();
+                    currencySymbol = "c$";
+                }
+                default -> {
+                    investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateRon();
+                    profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
+                    tax = (profit * Constants.USAIncomeTax) / 100;
+                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateRon();
+                    currencySymbol = "$";
+                }
+            }
 
             row[0] = stockBlob.getSymbol();
             row[1] = stockBlob.getName();
-            row[2] = "$ "+stockBlob.getValue();
-            row[3] = "$ "+stockBlob.getDivPerQ();
+            row[2] = currencySymbol + " "+stockBlob.getValue();
+            row[3] = currencySymbol + " "+stockBlob.getDivPerQ();
             row[4] = stockBlob.getOwnShares();
-            row[5] = "$ "+Constants.currencyFormat.format(investmentDollar);
-            row[6] = "$ "+ Constants.currencyFormat.format(profitDollar-taxDollar);
-            row[7] = "$ "+ Constants.currencyFormat.format(taxDollar);
+            row[5] = currencySymbol + " "+Constants.currencyFormat.format(investment);
+            row[6] = currencySymbol + " "+ Constants.currencyFormat.format(profit-tax);
+            row[7] = currencySymbol + " "+ Constants.currencyFormat.format(tax);
             row[8] = Constants.currencyFormat.format(profitRON)+" RON";
             model.addRow(row);
         }
@@ -220,7 +252,7 @@ public class GuiStockLogic {
         investmentTextField.setText(String.valueOf(stockBlob.getInvestment()));
         industryComboBox.removeAllItems();
 
-        if (Constants.industryComboBoxList.get(sectorComboBox.getModel().getSelectedItem()) !=null) {
+        if (null != Constants.industryComboBoxList.get(sectorComboBox.getModel().getSelectedItem())) {
             String[] industryListSaved = Constants.industryComboBoxList.get(sectorComboBox.getModel().getSelectedItem());
             for (String s : industryListSaved) {
                 industryComboBox.addItem(s);
