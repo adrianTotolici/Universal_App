@@ -24,10 +24,6 @@ public class Logic {
 
     private static Logic instance;
     private HashMap<String, Object> stockList = new HashMap<>();
-    private double exchangeRateRon;
-    private double exchangeRatePounds;
-    private double exchangeRateEuro;
-    private double exchangeRateCanadianDollar;
 
     public static Logic getInstance(){
         if (instance == null) {
@@ -41,11 +37,6 @@ public class Logic {
     }
 
     private void init(){
-        exchangeRateRon = getExchangeRate("RON");
-        exchangeRateEuro = getExchangeRate("EUR");
-        exchangeRatePounds = getExchangeRate("GBP");
-        exchangeRateCanadianDollar = getExchangeRate("CAD");
-
         try {
             Path stockFilePath = Path.of(Constants.stockFilePath);
             if  ( ! Files.exists(stockFilePath)) {
@@ -56,22 +47,6 @@ public class Logic {
             throw new RuntimeException(e);
         }
 
-    }
-
-    public double getExchangeRateRon() {
-        return exchangeRateRon;
-    }
-
-    public  double getExchangeRateEuro(){
-        return exchangeRateEuro;
-    }
-
-    public double getExchangeRatePounds(){
-        return exchangeRatePounds;
-    }
-
-    public double getExchangeRateCanadianDollar(){
-        return exchangeRateCanadianDollar;
     }
 
     public void getStock(String name){
@@ -247,8 +222,7 @@ public class Logic {
     }
 
     public void removeAllStock(){
-        for (String symbol : stockList.keySet()) {
-            removeStock(symbol);
-        }
+        stockList.clear();
+        Utils.saveData(stockList, Constants.stockFilePath);
     }
 }

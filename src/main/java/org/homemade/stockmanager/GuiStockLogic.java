@@ -77,11 +77,11 @@ public class GuiStockLogic {
         stockTable = new JTable(tableModel);
         viewStockTable.getViewport().add(stockTable);
         Utils.Log("Initialize stock table.");
-        updateStockTable();
+        updateStockTable(false);
         Utils.Log("Update stocks table values.");
     }
 
-    private void updateStockTable(){
+    private void updateStockTable(boolean importData){
         HashMap<String, Stock_blob> stockBlobs = Logic.getInstance().loadStockData();
         DefaultTableModel model = (DefaultTableModel) stockTable.getModel();
         model.setRowCount(0);
@@ -99,43 +99,59 @@ public class GuiStockLogic {
 
             switch (stockBlob.getSymbol()) {
                 case "MC.PA" -> {
-                    investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateEuro();
+                    if (importData) {
+                        investment = stockBlob.getInvestment();
+                    }else {
+                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRate(Constants.Euro);
+                    }
                     profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
                     tax = (profit * Constants.FRIncomeTax) / 100;
-                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateEuro();
+                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRate(Constants.Euro);
                     currencySymbol = "€";
                 }
                 case "TRIG.L", "BSIF.L" -> {
-                    investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRatePounds();
-                    profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
+                    if (importData) {
+                        investment = stockBlob.getInvestment();
+                    }else {
+                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRate(Constants.Pounds);
+                    }
+                    profit = (stockBlob.getOwnShares() * stockBlob.getDivPerQ())/100;
                     tax = (profit * Constants.GBIncomeTax) / 100;
-                    profitRON = (((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRatePounds())/100;
+                    profitRON = (((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRate(Constants.Pounds))/100;
                     currencySymbol = "£";
                 }
                 case "ENB" -> {
-                    investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateCanadianDollar();
+                    if (importData) {
+                        investment = stockBlob.getInvestment();
+                    }else {
+                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRate(Constants.CanadianDollar);
+                    }
                     profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
                     tax = (profit * Constants.USAIncomeTax) / 100;
-                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateCanadianDollar();
+                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRate(Constants.CanadianDollar);
                     currencySymbol = "c$";
                 }
                 default -> {
-                    investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateRon();
+                    if (importData) {
+                        investment = stockBlob.getInvestment();
+                    }else {
+                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRate(Constants.Ron);
+                    }
                     profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
                     tax = (profit * Constants.USAIncomeTax) / 100;
-                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateRon();
+                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRate(Constants.Ron);
                     currencySymbol = "$";
                 }
             }
 
             row[0] = stockBlob.getSymbol();
             row[1] = stockBlob.getName();
-            row[2] = currencySymbol + " "+stockBlob.getValue();
-            row[3] = currencySymbol + " "+stockBlob.getDivPerQ();
+            row[2] = currencySymbol + " " + Constants.currencyFormat.format(stockBlob.getValue());
+            row[3] = currencySymbol + " " + Constants.dividendPayFormat.format(stockBlob.getDivPerQ());
             row[4] = stockBlob.getOwnShares();
-            row[5] = currencySymbol + " "+Constants.currencyFormat.format(investment);
-            row[6] = currencySymbol + " "+ Constants.currencyFormat.format(profit-tax);
-            row[7] = currencySymbol + " "+ Constants.currencyFormat.format(tax);
+            row[5] = currencySymbol + " " + Constants.currencyFormat.format(investment);
+            row[6] = currencySymbol + " " + Constants.currencyFormat.format(profit-tax);
+            row[7] = currencySymbol + " " + Constants.currencyFormat.format(tax);
             row[8] = Constants.currencyFormat.format(profitRON)+" RON";
             model.addRow(row);
         }
@@ -153,7 +169,7 @@ public class GuiStockLogic {
         importData.addActionListener( e -> {
             Utils.Log("Import XLSX form Google drive.");
             Logic.getInstance().readXLSX("test");
-            updateStockTable();
+            updateStockTable(true);
         });
 
         editButton.addActionListener(e -> {
@@ -175,7 +191,7 @@ public class GuiStockLogic {
                     stockTable.clearSelection();
                 }
             }
-            updateStockTable();
+            updateStockTable(false);
 
         });
 
@@ -190,13 +206,13 @@ public class GuiStockLogic {
                 Logic.getInstance().removeStock(valueAt);
                 stockTable.clearSelection();
             }
-            updateStockTable();
+            updateStockTable(false);
         });
 
         removeAll.addActionListener(e -> {
             Utils.Log("Remove all added stock !");
             Logic.getInstance().removeAllStock();
-            updateStockTable();
+            updateStockTable(false);
         });
 
         newStockField.addKeyListener(new KeyAdapter() {
@@ -207,7 +223,7 @@ public class GuiStockLogic {
                     String newStockName = newStockField.getText().toUpperCase();
                     newStockField.setText("");
                     Logic.getInstance().getStock(newStockName);
-                    updateStockTable();
+                    updateStockTable(false);
                 }
             }
         });
@@ -282,7 +298,7 @@ public class GuiStockLogic {
             stockBlob.setInvestment(investment);
 
             Logic.getInstance().updateStock(stockBlob);
-            updateStockTable();
+            updateStockTable(false);
             resetEditPanel();
             editStockPanel.setVisible(false);
         });
