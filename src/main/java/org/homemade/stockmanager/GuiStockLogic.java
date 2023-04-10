@@ -36,6 +36,8 @@ public class GuiStockLogic {
     private JComboBox industryComboBox;
     private JLabel payDateLabel;
     private JTextField payDateText;
+    private JButton importData;
+    private JButton removeAll;
 
     public GuiStockLogic(JFrame jFrame) {
         this.jFrame = jFrame;
@@ -52,8 +54,10 @@ public class GuiStockLogic {
 
     private void showStockPanel(){
         exitButton.setText(DefaultLang.exitButtonText);
+        importData.setText(DefaultLang.importDataButtonText);
         editButton.setText(DefaultLang.editButtonText);
         removeButton.setText(DefaultLang.removeButtonText);
+        removeAll.setText(DefaultLang.removeAllButtonText);
 
         stockPanel.setVisible(true);
 
@@ -66,39 +70,88 @@ public class GuiStockLogic {
         jFrame.repaint();
     }
 
+    @SuppressWarnings("BoundFieldAssignment")
     private void showStockTable(){
         Object[][] data = new Object[0][0];
         DefaultTableModel tableModel = new DefaultTableModel(data,Constants.columnNamesStockTable);
         stockTable = new JTable(tableModel);
         viewStockTable.getViewport().add(stockTable);
         Utils.Log("Initialize stock table.");
-        updateStockTable();
+        updateStockTable(false);
         Utils.Log("Update stocks table values.");
     }
 
-    private void updateStockTable(){
+    private void updateStockTable(boolean importData){
         HashMap<String, Stock_blob> stockBlobs = Logic.getInstance().loadStockData();
         DefaultTableModel model = (DefaultTableModel) stockTable.getModel();
         model.setRowCount(0);
         Object[] row = new Object[Constants.columnNamesStockTable.length];
 
+        double investment;
+        double profit;
+        double tax;
+        double profitRON;
+        String currencySymbol;
+
         for (String key : stockBlobs.keySet()) {
+
             Stock_blob stockBlob = stockBlobs.get(key);
-            double investmentDollar = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateRon();
-            double profitDollar = stockBlob.getOwnShares()*stockBlob.getDivPerQ();
 
-            double taxDollar = (profitDollar*Constants.USAIncomeTax) /100;
-
-            double profitRON= ((stockBlob.getOwnShares() * stockBlob.getDivPerQ())-taxDollar) * Logic.getInstance().getExchangeRateRon();
+            switch (stockBlob.getSymbol()) {
+                case "MC.PA" -> {
+                    if (importData) {
+                        investment = stockBlob.getInvestment();
+                    }else {
+                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRate(Constants.Euro);
+                    }
+                    profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
+                    tax = (profit * Constants.FRIncomeTax) / 100;
+                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRate(Constants.Euro);
+                    currencySymbol = "€";
+                }
+                case "TRIG.L", "BSIF.L" -> {
+                    if (importData) {
+                        investment = stockBlob.getInvestment();
+                    }else {
+                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRate(Constants.Pounds);
+                    }
+                    profit = (stockBlob.getOwnShares() * stockBlob.getDivPerQ())/100;
+                    tax = (profit * Constants.GBIncomeTax) / 100;
+                    profitRON = (((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRate(Constants.Pounds))/100;
+                    currencySymbol = "£";
+                }
+                case "ENB" -> {
+                    if (importData) {
+                        investment = stockBlob.getInvestment();
+                    }else {
+                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRate(Constants.CanadianDollar);
+                    }
+                    profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
+                    tax = (profit * Constants.USAIncomeTax) / 100;
+                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRate(Constants.CanadianDollar);
+                    currencySymbol = "c$";
+                }
+                default -> {
+                    if (importData) {
+                        investment = stockBlob.getInvestment();
+                    }else {
+                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRate(Constants.Ron);
+                    }
+                    profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
+                    tax = (profit * Constants.USAIncomeTax) / 100;
+                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRate(Constants.Ron);
+                    currencySymbol = "$";
+                }
+            }
 
             row[0] = stockBlob.getSymbol();
             row[1] = stockBlob.getName();
-            row[2] = "$ "+stockBlob.getValue();
-            row[3] = "$ "+stockBlob.getDivPerQ();
+            row[2] = currencySymbol + " " + Constants.currencyFormat.format(stockBlob.getValue());
+            row[3] = currencySymbol + " " + Constants.dividendPayFormat.format(stockBlob.getDivPerQ());
             row[4] = stockBlob.getOwnShares();
-            row[5] = "$ "+Constants.currencyFormat.format(investmentDollar);
-            row[6] = "$ "+ Constants.currencyFormat.format(profitDollar-taxDollar);
-            row[7] = "$ "+ Constants.currencyFormat.format(taxDollar);
+            row[5] = currencySymbol + " " + Constants.currencyFormat.format(investment);
+            row[6] = currencySymbol + " " + Constants.currencyFormat.format(profit-tax);
+            row[7] = currencySymbol + " " + Constants.currencyFormat.format(tax);
             row[8] = Constants.currencyFormat.format(profitRON)+" RON";
             model.addRow(row);
         }
@@ -111,6 +164,12 @@ public class GuiStockLogic {
         exitButton.addActionListener(e -> {
             Utils.Log("Call Main Menu GUI.");
             MainGuiLogic.getInstance(jFrame).init();
+        });
+
+        importData.addActionListener( e -> {
+            Utils.Log("Import XLSX form Google drive.");
+            Logic.getInstance().readXLSX("test");
+            updateStockTable(true);
         });
 
         editButton.addActionListener(e -> {
@@ -132,7 +191,7 @@ public class GuiStockLogic {
                     stockTable.clearSelection();
                 }
             }
-            updateStockTable();
+            updateStockTable(false);
 
         });
 
@@ -147,7 +206,13 @@ public class GuiStockLogic {
                 Logic.getInstance().removeStock(valueAt);
                 stockTable.clearSelection();
             }
-            updateStockTable();
+            updateStockTable(false);
+        });
+
+        removeAll.addActionListener(e -> {
+            Utils.Log("Remove all added stock !");
+            Logic.getInstance().removeAllStock();
+            updateStockTable(false);
         });
 
         newStockField.addKeyListener(new KeyAdapter() {
@@ -158,7 +223,7 @@ public class GuiStockLogic {
                     String newStockName = newStockField.getText().toUpperCase();
                     newStockField.setText("");
                     Logic.getInstance().getStock(newStockName);
-                    updateStockTable();
+                    updateStockTable(false);
                 }
             }
         });
@@ -203,7 +268,7 @@ public class GuiStockLogic {
         investmentTextField.setText(String.valueOf(stockBlob.getInvestment()));
         industryComboBox.removeAllItems();
 
-        if (Constants.industryComboBoxList.get(sectorComboBox.getModel().getSelectedItem()) !=null) {
+        if (null != Constants.industryComboBoxList.get(sectorComboBox.getModel().getSelectedItem())) {
             String[] industryListSaved = Constants.industryComboBoxList.get(sectorComboBox.getModel().getSelectedItem());
             for (String s : industryListSaved) {
                 industryComboBox.addItem(s);
@@ -233,7 +298,7 @@ public class GuiStockLogic {
             stockBlob.setInvestment(investment);
 
             Logic.getInstance().updateStock(stockBlob);
-            updateStockTable();
+            updateStockTable(false);
             resetEditPanel();
             editStockPanel.setVisible(false);
         });

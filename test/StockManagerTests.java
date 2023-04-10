@@ -1,4 +1,3 @@
-import org.homemade.stockmanager.Constants;
 import org.homemade.stockmanager.Logic;
 import org.homemade.stockmanager.blobs.Stock_blob;
 import org.junit.jupiter.api.Assertions;

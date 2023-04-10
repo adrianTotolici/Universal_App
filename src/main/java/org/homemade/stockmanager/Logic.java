@@ -7,17 +7,23 @@ import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
 
 import java.io.*;
+import java.math.BigDecimal;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.Row;
+
 public class Logic {
 
     private static Logic instance;
     private HashMap<String, Object> stockList = new HashMap<>();
-    private double exchangeRateRon;
 
     public static Logic getInstance(){
         if (instance == null) {
@@ -31,8 +37,6 @@ public class Logic {
     }
 
     private void init(){
-        exchangeRateRon = getExchangeRate("RON");
-
         try {
             Path stockFilePath = Path.of(Constants.stockFilePath);
             if  ( ! Files.exists(stockFilePath)) {
@@ -42,10 +46,7 @@ public class Logic {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-    }
 
-    public double getExchangeRateRon() {
-        return exchangeRateRon;
     }
 
     public void getStock(String name){
@@ -169,4 +170,59 @@ public class Logic {
         }
     }
 
+    public void readXLSX(String xlsxPath) {
+        int dividendIndexSheet = 4;
+        int shareNameColumnIndex = 1;
+        int shareIndustryColumnIndex = 13;
+        int divPerQColumnIndex = 3;
+        int ownSharesColumnIndex = 8;
+        int investmentColumnIndex = 7;
+        int sectorColumnIndex = 12;
+
+        HashMap<String, String> shareSymbolReplacement = Constants.shareSymbolReplacement;
+
+        try {
+            FileInputStream fileInputStream = new FileInputStream("Dividende.xlsx");
+            XSSFWorkbook  workBook = new XSSFWorkbook (fileInputStream);
+            XSSFSheet dividendAll = workBook.getSheetAt(dividendIndexSheet);
+            for (Row row : dividendAll) {
+                int rowNum = row.getRowNum();
+                if (rowNum>=2){
+                    String shareSymbol = row.getCell(shareNameColumnIndex).getStringCellValue();
+                    for (String origSymbol : shareSymbolReplacement.keySet()) {
+                        if (shareSymbol.equals(origSymbol)){
+                            shareSymbol = shareSymbolReplacement.get(origSymbol);
+                        }
+                    }
+                    getStock(shareSymbol);
+                    String shareIndustry = row.getCell(shareIndustryColumnIndex).getStringCellValue();
+                    double shareDivPerQ = (row.getCell(divPerQColumnIndex).getNumericCellValue())/100;
+                    double ownShareNum = row.getCell(ownSharesColumnIndex).getNumericCellValue();
+                    double investment = row.getCell(investmentColumnIndex).getNumericCellValue();
+                    String sector = row.getCell(sectorColumnIndex).getStringCellValue();
+
+                    Stock_blob stockBlob = getAddedStock(shareSymbol);
+                    stockBlob.setIndustry(shareIndustry);
+                    stockBlob.setDivPerQ(shareDivPerQ);
+                    stockBlob.setOwnShares(ownShareNum);
+                    stockBlob.setInvestment(investment);
+                    stockBlob.setSector(sector);
+                    switch (shareSymbol){
+                        case "TRIG.L", "BSIF.L" -> {
+                            stockBlob.setValue(BigDecimal.valueOf(stockBlob.getValue()/100));
+                        }
+                    }
+
+                    updateStock(stockBlob);
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void removeAllStock(){
+        stockList.clear();
+        Utils.saveData(stockList, Constants.stockFilePath);
+    }
 }
