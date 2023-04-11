@@ -1,10 +1,10 @@
-import org.homemade.stockmanager.Constants;
-import org.homemade.stockmanager.Logic;
+package org.homemade.stockmanager;
+
 import org.homemade.stockmanager.blobs.Stock_blob;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class StockManagerTest {
+public class LogicTest {
 
     @Test
     public void getInstance(){
