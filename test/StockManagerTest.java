@@ -4,7 +4,7 @@ import org.homemade.stockmanager.blobs.Stock_blob;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class StockManagerTests {
+public class StockManagerTest {
 
     @Test
     public void getInstance(){
