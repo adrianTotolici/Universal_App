@@ -102,44 +102,44 @@ public class GuiStockLogic {
                     if (importData) {
                         investment = stockBlob.getInvestment();
                     }else {
-                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRate(Constants.Euro);
+                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateEUR();
                     }
                     profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
                     tax = (profit * Constants.FRIncomeTax) / 100;
-                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRate(Constants.Euro);
+                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateEUR();
                     currencySymbol = "€";
                 }
                 case "TRIG.L", "BSIF.L" -> {
                     if (importData) {
                         investment = stockBlob.getInvestment();
                     }else {
-                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRate(Constants.Pounds);
+                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateGBP();
                     }
                     profit = (stockBlob.getOwnShares() * stockBlob.getDivPerQ())/100;
                     tax = (profit * Constants.GBIncomeTax) / 100;
-                    profitRON = (((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRate(Constants.Pounds))/100;
+                    profitRON = (((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateGBP())/100;
                     currencySymbol = "£";
                 }
                 case "ENB" -> {
                     if (importData) {
                         investment = stockBlob.getInvestment();
                     }else {
-                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRate(Constants.CanadianDollar);
+                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateCAD();
                     }
                     profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
                     tax = (profit * Constants.USAIncomeTax) / 100;
-                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRate(Constants.CanadianDollar);
+                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateCAD();
                     currencySymbol = "c$";
                 }
                 default -> {
                     if (importData) {
                         investment = stockBlob.getInvestment();
                     }else {
-                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRate(Constants.Ron);
+                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateRON();
                     }
                     profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
                     tax = (profit * Constants.USAIncomeTax) / 100;
-                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRate(Constants.Ron);
+                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateRON();
                     currencySymbol = "$";
                 }
             }

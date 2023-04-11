@@ -1,3 +1,4 @@
+import org.homemade.stockmanager.Constants;
 import org.homemade.stockmanager.Logic;
 import org.homemade.stockmanager.blobs.Stock_blob;
 import org.junit.jupiter.api.Assertions;
@@ -15,7 +16,7 @@ public class StockManagerTests {
 
     @Test
     public void getExchangeRateRon(){
-        Assertions.assertTrue(Logic.getInstance().getExchangeRateRon() > 0);
+        Assertions.assertTrue(Logic.getInstance().getExchangeRate(Constants.Ron) > 0);
     }
 
     @Test

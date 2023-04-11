@@ -24,6 +24,10 @@ public class Logic {
 
     private static Logic instance;
     private HashMap<String, Object> stockList = new HashMap<>();
+    private double exchangeRateRON;
+    private double exchangeRateEUR;
+    private double exchangeRateCAD;
+    private double exchangeRateGBP;
 
     public static Logic getInstance(){
         if (instance == null) {
@@ -43,10 +47,34 @@ public class Logic {
                 Files.createDirectories(stockFilePath.getParent());
                 Files.createFile(stockFilePath);
             }
+            getExchangeRates();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
+    }
+
+    private void getExchangeRates(){
+        exchangeRateRON = getExchangeRate(Constants.Ron);
+        exchangeRateCAD = getExchangeRate(Constants.CanadianDollar);
+        exchangeRateEUR = getExchangeRate(Constants.Euro);
+        exchangeRateGBP = getExchangeRate(Constants.Pounds);
+    }
+
+    public double getExchangeRateRON() {
+        return exchangeRateRON;
+    }
+
+    public double getExchangeRateEUR() {
+        return exchangeRateEUR;
+    }
+
+    public double getExchangeRateCAD() {
+        return exchangeRateCAD;
+    }
+
+    public double getExchangeRateGBP() {
+        return exchangeRateCAD;
     }
 
     public void getStock(String name){
