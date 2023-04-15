@@ -74,7 +74,7 @@ public class Logic {
     }
 
     public double getExchangeRateGBP() {
-        return exchangeRateCAD;
+        return exchangeRateGBP;
     }
 
     public void getStock(String name){
@@ -91,7 +91,7 @@ public class Logic {
                 Utils.Log("The Object  was successfully written to a file");
             }
 
-            loadStockData();
+            loadStockData(Constants.stockFilePath);
         } catch (RuntimeException e){
             Utils.Log(e.getMessage());
         } catch (IOException e) {
@@ -100,10 +100,10 @@ public class Logic {
     }
 
     @SuppressWarnings (value="unchecked")
-    public HashMap<String, Stock_blob> loadStockData() {
+    public HashMap<String, Stock_blob> loadStockData(String stockFilePath) {
         HashMap<String, Stock_blob> stockBlobs = new HashMap<>();
         try {
-            FileInputStream fi = new FileInputStream(Constants.stockFilePath);
+            FileInputStream fi = new FileInputStream(stockFilePath);
             ObjectInputStream oi = new ObjectInputStream(fi);
 
             stockList = (HashMap<String, Object>) oi.readObject();

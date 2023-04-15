@@ -85,7 +85,7 @@ public class GuiStockLogic extends Component {
     }
 
     private void updateStockTable(boolean importData){
-        HashMap<String, Stock_blob> stockBlobs = Logic.getInstance().loadStockData();
+        HashMap<String, Stock_blob> stockBlobs = Logic.getInstance().loadStockData(Constants.stockFilePath);
         DefaultTableModel model = (DefaultTableModel) stockTable.getModel();
         model.setRowCount(0);
         Object[] row = new Object[Constants.columnNamesStockTable.length];
