@@ -7,10 +7,12 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.util.HashMap;
 
-public class GuiStockLogic {
+public class GuiStockLogic extends Component {
 
     private static GuiStockLogic instance;
     private final JFrame jFrame;
@@ -38,6 +40,7 @@ public class GuiStockLogic {
     private JTextField payDateText;
     private JButton importData;
     private JButton removeAll;
+    private JFileChooser xmlImporter;
 
     public GuiStockLogic(JFrame jFrame) {
         this.jFrame = jFrame;
@@ -168,8 +171,14 @@ public class GuiStockLogic {
 
         importData.addActionListener( e -> {
             Utils.Log("Import XLSX form Google drive.");
-            Logic.getInstance().readXLSX("test");
-            updateStockTable(true);
+            xmlImporter = new JFileChooser();
+            xmlImporter.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            int returnVal = xmlImporter.showOpenDialog(GuiStockLogic.this);
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = xmlImporter.getSelectedFile();
+                Logic.getInstance().readXLSX(file.getAbsolutePath());
+                updateStockTable(true);
+            }
         });
 
         editButton.addActionListener(e -> {
