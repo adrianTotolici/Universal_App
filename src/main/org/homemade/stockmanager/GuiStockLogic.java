@@ -40,6 +40,7 @@ public class GuiStockLogic extends Component {
     private JTextField payDateText;
     private JButton importData;
     private JButton removeAll;
+    private JButton updateExchangeRate;
     private JFileChooser xmlImporter;
 
     public GuiStockLogic(JFrame jFrame) {
@@ -61,6 +62,7 @@ public class GuiStockLogic extends Component {
         editButton.setText(DefaultLang.editButtonText);
         removeButton.setText(DefaultLang.removeButtonText);
         removeAll.setText(DefaultLang.removeAllButtonText);
+        updateExchangeRate.setText(DefaultLang.updateExchangeRateButtonText);
 
         stockPanel.setVisible(true);
 
@@ -161,6 +163,7 @@ public class GuiStockLogic extends Component {
     }
 
     public void init(){
+        Logic.getFirstInstance(Constants.stockFilePath);
         showStockPanel();
         showStockTable();
         editStockPanel.setVisible(false);
@@ -222,6 +225,11 @@ public class GuiStockLogic extends Component {
             Utils.Log("Remove all added stock !");
             Logic.getInstance().removeAllStock();
             updateStockTable(false);
+        });
+
+        updateExchangeRate.addActionListener( e -> {
+            Utils.Log("Update exchange rate.");
+            Logic.getInstance().getExchangeRates();
         });
 
         newStockField.addKeyListener(new KeyAdapter() {
