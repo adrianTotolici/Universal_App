@@ -16,6 +16,7 @@ import java.util.HashMap;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
@@ -24,11 +25,22 @@ public class Logic {
 
     private static Logic instance;
     private HashMap<String, Object> stockList = new HashMap<>();
+    private double exchangeRateRON;
+    private double exchangeRateEUR;
+    private double exchangeRateCAD;
+    private double exchangeRateGBP;
+    private final boolean development = true;
+    private static String stockFilePath;
 
-    public static Logic getInstance(){
+    public static Logic getFirstInstance(String filePath){
         if (instance == null) {
+            stockFilePath = filePath;
             instance = new Logic();
         }
+        return instance;
+    }
+
+    public static Logic getInstance(){
         return instance;
     }
 
@@ -38,15 +50,43 @@ public class Logic {
 
     private void init(){
         try {
-            Path stockFilePath = Path.of(Constants.stockFilePath);
-            if  ( ! Files.exists(stockFilePath)) {
-                Files.createDirectories(stockFilePath.getParent());
-                Files.createFile(stockFilePath);
+            Path stockFile = Path.of(stockFilePath);
+            if  ( ! Files.exists(stockFile)) {
+                Files.createDirectories(stockFile.getParent());
+                Files.createFile(stockFile);
             }
+            getExchangeRates();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
+    }
+
+    public void getExchangeRates(){
+        exchangeRateRON = getExchangeRate(Constants.Ron);
+        Utils.Log("Exchange rate for RON: " + exchangeRateRON);
+        exchangeRateCAD = getExchangeRate(Constants.CanadianDollar);
+        Utils.Log("Exchange rate for CAD: " + exchangeRateCAD);
+        exchangeRateEUR = getExchangeRate(Constants.Euro);
+        Utils.Log("Exchange rate for EUR: " + exchangeRateEUR);
+        exchangeRateGBP = getExchangeRate(Constants.Pounds);
+        Utils.Log("Exchange rate for GBP: " + exchangeRateGBP);
+    }
+
+    public double getExchangeRateRON() {
+        return exchangeRateRON;
+    }
+
+    public double getExchangeRateEUR() {
+        return exchangeRateEUR;
+    }
+
+    public double getExchangeRateCAD() {
+        return exchangeRateCAD;
+    }
+
+    public double getExchangeRateGBP() {
+        return exchangeRateGBP;
     }
 
     public void getStock(String name){
@@ -59,11 +99,11 @@ public class Logic {
 
             if (! stockList.containsKey(stockBlob.getSymbol().toUpperCase())) {
                 stockList.put(stockBlob.getSymbol(), stockBlob);
-                Utils.saveData(stockList, Constants.stockFilePath);
+                Utils.saveData(stockList, stockFilePath);
                 Utils.Log("The Object  was successfully written to a file");
             }
 
-            loadStockData();
+            loadStockData(stockFilePath);
         } catch (RuntimeException e){
             Utils.Log(e.getMessage());
         } catch (IOException e) {
@@ -72,10 +112,10 @@ public class Logic {
     }
 
     @SuppressWarnings (value="unchecked")
-    public HashMap<String, Stock_blob> loadStockData() {
+    public HashMap<String, Stock_blob> loadStockData(String stockFilePath) {
         HashMap<String, Stock_blob> stockBlobs = new HashMap<>();
         try {
-            FileInputStream fi = new FileInputStream(Constants.stockFilePath);
+            FileInputStream fi = new FileInputStream(stockFilePath);
             ObjectInputStream oi = new ObjectInputStream(fi);
 
             stockList = (HashMap<String, Object>) oi.readObject();
@@ -104,7 +144,7 @@ public class Logic {
     public void removeStock(String symbol){
         if (stockList.containsKey(symbol)){
             stockList.remove(symbol);
-            Utils.saveData(stockList, Constants.stockFilePath);
+            Utils.saveData(stockList, stockFilePath);
         }
     }
 
@@ -129,45 +169,54 @@ public class Logic {
             stockList.put(stockBlob.getSymbol(), old_stock);
         }
 
-        Utils.saveData(stockList, Constants.stockFilePath);
+        Utils.saveData(stockList, stockFilePath);
         Utils.Log("The Object  was successfully written to a file");
 
     }
 
     public double getExchangeRate(String currency) {
 
-        try {
-            // Your Open Exchange Rates app_id
-            String appId = "4207fe17e2564aebb5f1627b5928f877";
+        if (development) {
+            if (currency.equals(Constants.Euro)) return Constants.EURO;
+            if (currency.equals(Constants.CanadianDollar)) return Constants.CAD;
+            if (currency.equals(Constants.Pounds)) return Constants.GBP;
+            if (currency.equals(Constants.Ron)) return Constants.RON;
+            if (currency.equals("USD")) return 1;
+        }else {
+            try {
+                // Your Open Exchange Rates app_id
+                String appId = "4207fe17e2564aebb5f1627b5928f877";
 
-            // URL for the Open Exchange Rates API
-            String url = "https://openexchangerates.org/api/latest.json?app_id=" + appId;
+                // URL for the Open Exchange Rates API
+                String url = "https://openexchangerates.org/api/latest.json?app_id=" + appId;
 
-            // Send the GET request to the API
-            HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
-            con.setRequestMethod("GET");
+                // Send the GET request to the API
+                HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+                con.setRequestMethod("GET");
 
-            // Read the API response
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            StringBuilder content = new StringBuilder();
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
+                // Read the API response
+                BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
+                }
+                in.close();
+
+                // Parse the JSON response
+                JSONObject json = new JSONObject(content.toString());
+                JSONObject rates = json.getJSONObject("rates");
+                double exchangeRate = rates.getDouble(currency);
+
+                // Print the exchange rate
+                Utils.Log("Exchange rate for " + currency + ": " + exchangeRate);
+
+                return exchangeRate;
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-            in.close();
-
-            // Parse the JSON response
-            JSONObject json = new JSONObject(content.toString());
-            JSONObject rates = json.getJSONObject("rates");
-            double exchangeRate = rates.getDouble(currency);
-
-            // Print the exchange rate
-            Utils.Log("Exchange rate for " + currency + ": " + exchangeRate);
-
-            return exchangeRate;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
+        return 0;
     }
 
     public void readXLSX(String xlsxPath) {
@@ -182,7 +231,7 @@ public class Logic {
         HashMap<String, String> shareSymbolReplacement = Constants.shareSymbolReplacement;
 
         try {
-            FileInputStream fileInputStream = new FileInputStream("Dividende.xlsx");
+            FileInputStream fileInputStream = new FileInputStream(xlsxPath);
             XSSFWorkbook  workBook = new XSSFWorkbook (fileInputStream);
             XSSFSheet dividendAll = workBook.getSheetAt(dividendIndexSheet);
             for (Row row : dividendAll) {
@@ -223,6 +272,7 @@ public class Logic {
 
     public void removeAllStock(){
         stockList.clear();
-        Utils.saveData(stockList, Constants.stockFilePath);
+        Utils.saveData(stockList, stockFilePath);
     }
+
 }

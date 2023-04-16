@@ -5,6 +5,7 @@ public class DefaultLang extends org.homemade.DefaultLang {
     //------------------ Settings ---------------------------
     public static String exitButtonText = "Exit Stock Manager";
     public static String importDataButtonText = "Import Data";
+    public static String updateExchangeRateButtonText = "Update Exchange Rate";
 
     //------------------ Share Menu -------------------------
     public static String editButtonText = "Edit Stock";
