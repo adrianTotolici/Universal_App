@@ -99,8 +99,7 @@ public class Logic {
 
             if (! stockList.containsKey(stockBlob.getSymbol().toUpperCase())) {
                 stockList.put(stockBlob.getSymbol(), stockBlob);
-                Utils.saveData(stockList, stockFilePath);
-                Utils.Log("The Object  was successfully written to a file");
+                saveStock();
             }
 
             loadStockData(stockFilePath);
@@ -144,7 +143,7 @@ public class Logic {
     public void removeStock(String symbol){
         if (stockList.containsKey(symbol)){
             stockList.remove(symbol);
-            Utils.saveData(stockList, stockFilePath);
+            saveStock();
         }
     }
 
@@ -169,9 +168,7 @@ public class Logic {
             stockList.put(stockBlob.getSymbol(), old_stock);
         }
 
-        Utils.saveData(stockList, stockFilePath);
-        Utils.Log("The Object  was successfully written to a file");
-
+        saveStock();
     }
 
     public double getExchangeRate(String currency) {
@@ -272,7 +269,12 @@ public class Logic {
 
     public void removeAllStock(){
         stockList.clear();
-        Utils.saveData(stockList, stockFilePath);
+        saveStock();
+    }
+
+    public void saveStock() {
+        Utils.saveData(stockList, Constants.stockFilePath);
+        Utils.Log("The Object  was successfully written to a file");
     }
 
 }

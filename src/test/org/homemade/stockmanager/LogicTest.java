@@ -4,6 +4,10 @@ import org.homemade.stockmanager.blobs.Stock_blob;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 
 public class LogicTest {
@@ -16,6 +20,7 @@ public class LogicTest {
     public static String TEST_STOCK_FILE_DIVIDEND_PATH = "src/test/resources/Dividende_test.xlsx";
 
     public static String TEST_SAVE_STOCK_FILE = "src/test/resources/test_stock_file_path";
+    public static String TEST_NEW_DIRECTORY_LOCATION = "src/test/resources/new_location";
 
     @Test
     public void getInstance(){
@@ -129,5 +134,42 @@ public class LogicTest {
         Assertions.assertTrue(0 < Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRateCAD());
         Assertions.assertTrue(0 < Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRateEUR());
         Assertions.assertTrue(0 < Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRateGBP());
+    }
+
+    @Test
+    public void saveStock(){
+        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getStock(TEST_STOCK);
+        Stock_blob stockBlob = Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getAddedStock(TEST_STOCK);
+        Assertions.assertEquals(TEST_STOCK, stockBlob.getSymbol());
+
+        File testLocation = new File(TEST_NEW_DIRECTORY_LOCATION);
+        testLocation.mkdirs();
+        Path path = Paths.get(TEST_NEW_DIRECTORY_LOCATION);
+        Assertions.assertTrue(Files.exists(path));
+
+        Constants.setStockFilePath(TEST_NEW_DIRECTORY_LOCATION);
+        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).saveStock();
+
+        File testFileLocation = new File(TEST_NEW_DIRECTORY_LOCATION+"/stock_file");
+        Path filePath = Paths.get(TEST_NEW_DIRECTORY_LOCATION+"/stock_file");
+        Assertions.assertTrue(Files.exists(filePath));
+
+        if (testFileLocation.delete()) {
+            System.out.println("Deleted the file: " + testFileLocation.getName());
+        } else {
+            System.out.println("Failed to delete the file.");
+        }
+
+        Assertions.assertFalse(Files.exists(filePath));
+
+        if (testLocation.delete()) {
+            System.out.println("Deleted the folder: " + testLocation.getName());
+        } else {
+            System.out.println("Failed to delete the folder.");
+        }
+
+        Assertions.assertFalse(Files.exists(path));
+
+        Constants.setStockFilePath("src/test/resources");
     }
 }
