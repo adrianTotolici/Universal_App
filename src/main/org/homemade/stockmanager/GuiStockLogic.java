@@ -41,7 +41,10 @@ public class GuiStockLogic extends Component {
     private JButton importData;
     private JButton removeAll;
     private JButton updateExchangeRate;
+    private JToolBar toolBar;
     private JFileChooser xmlImporter;
+    private JFileChooser pathLocation;
+    private JMenu menu;
 
     public GuiStockLogic(JFrame jFrame) {
         this.jFrame = jFrame;
@@ -165,6 +168,7 @@ public class GuiStockLogic extends Component {
     public void init(){
         Logic.getFirstInstance(Constants.stockFilePath);
         showStockPanel();
+        initMenuBar();
         showStockTable();
         editStockPanel.setVisible(false);
         exitButton.addActionListener(e -> {
@@ -275,6 +279,30 @@ public class GuiStockLogic extends Component {
         payDateLabel.setText(DefaultLang.payDateLabel);
     }
 
+    public void initMenuBar(){
+        JMenuBar menuBar = new JMenuBar();
+        menu = new JMenu("Menu");
+        JMenuItem menuButtonSavePathData = new JMenuItem("Save data path");
+        menu.add(menuButtonSavePathData);
+        menuBar.add(menu);
+        toolBar.add(menuBar);
+
+        menuButtonSavePathData.addActionListener( e -> {
+            Utils.Log("Save new path for storing data.");
+            pathLocation = new JFileChooser();
+            pathLocation.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            pathLocation.setCurrentDirectory(new File(Constants.stockFilePath));
+            int returnVal = pathLocation.showOpenDialog(GuiStockLogic.this);
+
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = pathLocation.getSelectedFile();
+                Constants.setStockFilePath(file.getAbsolutePath());
+                Logic.getInstance().saveStock();
+                Utils.Log("New stock path is: "+ Constants.stockFilePath);
+            }
+        });
+    }
+
     public void populateEditPanel(@NotNull Stock_blob stockBlob){
         Utils.Log("Load stock to be edited in Edit Form.");
         editStockPanel.setVisible(true);
@@ -336,6 +364,8 @@ public class GuiStockLogic extends Component {
         investmentTextField.setText("");
         industryComboBox.removeAllItems();
     }
+
+
 }
 
 

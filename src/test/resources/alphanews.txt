@@ -1,0 +1,4 @@
+api key: 25Z6DI5SELNX8M3J
+api documentation: https://www.alphavantage.co/documentation/
+
+api2 documentation: https://newsapi.org/
