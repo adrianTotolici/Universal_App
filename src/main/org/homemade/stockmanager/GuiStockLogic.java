@@ -38,9 +38,9 @@ public class GuiStockLogic extends Component {
     private JComboBox industryComboBox;
     private JLabel payDateLabel;
     private JTextField payDateText;
-    private JButton importData;
-    private JButton removeAll;
-    private JButton updateExchangeRate;
+    private JButton importDataButton;
+    private JButton removeAllButton;
+    private JButton updateExchangeRateButton;
     private JToolBar toolBar;
     private JFileChooser xmlImporter;
     private JFileChooser pathLocation;
@@ -61,11 +61,11 @@ public class GuiStockLogic extends Component {
 
     private void showStockPanel(){
         exitButton.setText(DefaultLang.exitButtonText);
-        importData.setText(DefaultLang.importDataButtonText);
+        importDataButton.setText(DefaultLang.importDataButtonText);
         editButton.setText(DefaultLang.editButtonText);
         removeButton.setText(DefaultLang.removeButtonText);
-        removeAll.setText(DefaultLang.removeAllButtonText);
-        updateExchangeRate.setText(DefaultLang.updateExchangeRateButtonText);
+        removeAllButton.setText(DefaultLang.removeAllButtonText);
+        updateExchangeRateButton.setText(DefaultLang.updateExchangeRateButtonText);
 
         stockPanel.setVisible(true);
 
@@ -176,7 +176,8 @@ public class GuiStockLogic extends Component {
             MainGuiLogic.getInstance(jFrame).init();
         });
 
-        importData.addActionListener( e -> {
+        importDataButton.addActionListener(e -> {
+           disableButtons(importDataButton);
             Utils.Log("Import XLSX form Google drive.");
             xmlImporter = new JFileChooser();
             xmlImporter.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -185,10 +186,13 @@ public class GuiStockLogic extends Component {
                 File file = xmlImporter.getSelectedFile();
                 Logic.getInstance().readXLSX(file.getAbsolutePath());
                 updateStockTable(true);
+
             }
+            enableButtons();
         });
 
         editButton.addActionListener(e -> {
+            disableButtons(editButton);
             Utils.Log("Edit selected stock.");
             if (!(newStockField.getText().isBlank() || newStockField.getText().isEmpty())){
                 Utils.Log("Update stock "+newStockField.getText().toUpperCase());
@@ -208,10 +212,11 @@ public class GuiStockLogic extends Component {
                 }
             }
             updateStockTable(false);
-
+            enableButtons();
         });
 
         removeButton.addActionListener(e -> {
+            disableButtons(removeButton);
             Utils.Log("Remove selected stock.");
             if (!(newStockField.getText().isBlank() || newStockField.getText().isEmpty())){
                 Utils.Log("Remove stock "+newStockField.getText().toUpperCase());
@@ -223,17 +228,22 @@ public class GuiStockLogic extends Component {
                 stockTable.clearSelection();
             }
             updateStockTable(false);
+            enableButtons();
         });
 
-        removeAll.addActionListener(e -> {
+        removeAllButton.addActionListener(e -> {
+            disableButtons(removeAllButton);
             Utils.Log("Remove all added stock !");
             Logic.getInstance().removeAllStock();
             updateStockTable(false);
+            enableButtons();
         });
 
-        updateExchangeRate.addActionListener( e -> {
+        updateExchangeRateButton.addActionListener(e -> {
+            disableButtons(updateExchangeRateButton);
             Utils.Log("Update exchange rate.");
             Logic.getInstance().getExchangeRates();
+            enableButtons();
         });
 
         newStockField.addKeyListener(new KeyAdapter() {
@@ -264,6 +274,7 @@ public class GuiStockLogic extends Component {
                 newStockField.setText("");
             }
         });
+
     }
 
     public void initEditPanel(){
@@ -365,7 +376,29 @@ public class GuiStockLogic extends Component {
         industryComboBox.removeAllItems();
     }
 
+    public void disableButtons(JButton buttonCall){
+        if (!(buttonCall.getLabel().equals(DefaultLang.importDataButtonText)))
+            importDataButton.setEnabled(false);
+        if (!(buttonCall.getLabel().equals(DefaultLang.exitButtonText)))
+            exitButton.setEnabled(false);
+        if (!(buttonCall.getLabel().equals(DefaultLang.updateExchangeRateButtonText)))
+            updateExchangeRateButton.setEnabled(false);
+        if (!(buttonCall.getLabel().equals(DefaultLang.editButtonText)))
+            editButton.setEnabled(false);
+        if (!(buttonCall.getLabel().equals(DefaultLang.removeAllButtonText)))
+            removeAllButton.setEnabled(false);
+        if (!(buttonCall.getLabel().equals(DefaultLang.removeButtonText)))
+            removeButton.setEnabled(false);
+    }
 
+    public void enableButtons(){
+        importDataButton.setEnabled(true);
+        exitButton.setEnabled(true);
+        updateExchangeRateButton.setEnabled(true);
+        editButton.setEnabled(true);
+        removeAllButton.setEnabled(true);
+        removeButton.setEnabled(true);
+    }
 }
 
 
