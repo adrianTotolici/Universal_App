@@ -42,6 +42,10 @@ public class GuiStockLogic extends Component {
     private JButton removeAllButton;
     private JButton updateExchangeRateButton;
     private JToolBar toolBar;
+    private JLabel exchangeRonValue;
+    private JLabel exchangeEURValue;
+    private JLabel exchangeGBPValue;
+    private JLabel exchangeCADValue;
     private JFileChooser xmlImporter;
     private JFileChooser pathLocation;
     private JMenu menu;
@@ -66,6 +70,11 @@ public class GuiStockLogic extends Component {
         removeButton.setText(DefaultLang.removeButtonText);
         removeAllButton.setText(DefaultLang.removeAllButtonText);
         updateExchangeRateButton.setText(DefaultLang.updateExchangeRateButtonText);
+
+        exchangeRonValue.setText("RON: "+Logic.getInstance().getExchangeRateRON());
+        exchangeEURValue.setText("EUR: "+Logic.getInstance().getExchangeRateEUR());
+        exchangeGBPValue.setText("GBP: "+Logic.getInstance().getExchangeRateGBP());
+        exchangeCADValue.setText("CAD: "+Logic.getInstance().getExchangeRateCAD());
 
         stockPanel.setVisible(true);
 
@@ -243,6 +252,10 @@ public class GuiStockLogic extends Component {
             disableButtons(updateExchangeRateButton);
             Utils.Log("Update exchange rate.");
             Logic.getInstance().getExchangeRates();
+            exchangeRonValue.setText("RON: "+Logic.getInstance().getExchangeRateRON());
+            exchangeEURValue.setText("EUR: "+Logic.getInstance().getExchangeRateEUR());
+            exchangeGBPValue.setText("GBP: "+Logic.getInstance().getExchangeRateGBP());
+            exchangeCADValue.setText("CAD: "+Logic.getInstance().getExchangeRateCAD());
             enableButtons();
         });
 
