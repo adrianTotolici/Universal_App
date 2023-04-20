@@ -277,4 +277,22 @@ public class Logic {
         Utils.Log("The Object  was successfully written to a file");
     }
 
+    public double getTotalInvested(){
+        double totalInvested = 0;
+        for (Object object : stockList.values()) {
+            Stock_blob stockBlob = (Stock_blob) object;
+            String shareSymbol = stockBlob.getSymbol();
+            switch (shareSymbol){
+                case "TRIG.L", "BSIF.L" ->
+                    totalInvested += stockBlob.getInvestment()*getExchangeRateGBP();
+                case "MC.PA" ->
+                    totalInvested += stockBlob.getInvestment()*getExchangeRateEUR();
+                case "ENB" ->
+                    totalInvested += stockBlob.getInvestment()*getExchangeRateCAD();
+                default ->
+                    totalInvested += stockBlob.getInvestment();
+            }
+        }
+        return totalInvested;
+    }
 }

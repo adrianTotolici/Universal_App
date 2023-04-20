@@ -46,6 +46,16 @@ public class GuiStockLogic extends Component {
     private JLabel exchangeEURValue;
     private JLabel exchangeGBPValue;
     private JLabel exchangeCADValue;
+    private JLabel totalInvestedLabel;
+    private JLabel totalInvestedValue;
+    private JLabel totalProfitLabel;
+    private JLabel totalProfitValue;
+    private JLabel totalProfitRonLabel;
+    private JLabel totalProfitRonValue;
+    private JLabel totalTaxLabel;
+    private JLabel totalTaxValue;
+    private JLabel consumerCyclicalLabel;
+    private JLabel consumerCyclicalProcent;
     private JFileChooser xmlImporter;
     private JFileChooser pathLocation;
     private JMenu menu;
@@ -75,6 +85,13 @@ public class GuiStockLogic extends Component {
         exchangeEURValue.setText("EUR: "+Logic.getInstance().getExchangeRateEUR());
         exchangeGBPValue.setText("GBP: "+Logic.getInstance().getExchangeRateGBP());
         exchangeCADValue.setText("CAD: "+Logic.getInstance().getExchangeRateCAD());
+
+        totalInvestedLabel.setText(DefaultLang.totalInvestmentLabel);
+        totalProfitLabel.setText(DefaultLang.totalProfitLabel);
+        totalProfitRonLabel.setText(DefaultLang.totalProfitRonLabel);
+        totalTaxLabel.setText(DefaultLang.totalTaxLabel);
+
+        consumerCyclicalLabel.setText(DefaultLang.consumerCyclicalLabel);
 
         stockPanel.setVisible(true);
 
@@ -179,6 +196,7 @@ public class GuiStockLogic extends Component {
         showStockPanel();
         initMenuBar();
         showStockTable();
+        initGeneralShareInfo();
         editStockPanel.setVisible(false);
         exitButton.addActionListener(e -> {
             Utils.Log("Call Main Menu GUI.");
@@ -325,6 +343,11 @@ public class GuiStockLogic extends Component {
                 Utils.Log("New stock path is: "+ Constants.stockFilePath);
             }
         });
+    }
+
+    public void initGeneralShareInfo(){
+        totalInvestedValue.setText(Constants.currencyFormat.format(Logic.getInstance().getTotalInvested()));
+
     }
 
     public void populateEditPanel(@NotNull Stock_blob stockBlob){
