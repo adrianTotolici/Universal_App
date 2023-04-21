@@ -24,7 +24,6 @@ public class DefaultLang extends org.homemade.DefaultLang {
     //-------------------- General share information panel ------
     public static String totalInvestmentLabel = "Total Investment";
     public static String totalProfitLabel = "Total Profit";
-    public static String totalProfitRonLabel = "Total RON Profit";
     public static String totalTaxLabel = "Total Tax";
     public static String consumerCyclicalLabel = Constants.sectorComboBoxList[0];
 }

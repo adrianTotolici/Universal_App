@@ -295,4 +295,66 @@ public class Logic {
         }
         return totalInvested;
     }
+
+    public double getTotalProfit(){
+        double totalProfit = 0;
+        for (Object object : stockList.values()) {
+            Stock_blob stockBlob = (Stock_blob) object;
+            String shareSymbol = stockBlob.getSymbol();
+            switch (shareSymbol){
+                case "TRIG.L", "BSIF.L" ->
+                        totalProfit += stockBlob.getDivPerQ()*getExchangeRateGBP();
+                case "MC.PA" ->
+                        totalProfit += stockBlob.getDivPerQ()*getExchangeRateEUR();
+                case "ENB" ->
+                        totalProfit += stockBlob.getDivPerQ()*getExchangeRateCAD();
+                default ->
+                        totalProfit += stockBlob.getDivPerQ();
+            }
+        }
+        return totalProfit;
+    }
+
+    public double getTotalTax(){
+        double totalTax = 0;
+        for (Object object : stockList.values()) {
+            Stock_blob stockBlob = (Stock_blob) object;
+            String shareSymbol = stockBlob.getSymbol();
+            switch (shareSymbol){
+                case "TRIG.L", "BSIF.L" ->
+                        totalTax += ((stockBlob.getDivPerQ()*Constants.GBIncomeTax) / 100)*getExchangeRateGBP();
+                case "MC.PA" ->
+                        totalTax += ((stockBlob.getDivPerQ()*Constants.FRIncomeTax) / 100)*getExchangeRateEUR();
+                case "ENB" ->
+                        totalTax += ((stockBlob.getDivPerQ()*Constants.USAIncomeTax) / 100)*getExchangeRateCAD();
+                case "TSM" ->
+                        totalTax += ((stockBlob.getDivPerQ())*Constants.TWIncomeTax) / 100;
+                default ->
+                        totalTax += ((stockBlob.getDivPerQ())*Constants.USAIncomeTax) / 100;
+            }
+        }
+        return totalTax;
+    }
+
+    public double getInvestmentDistribution(String sector){
+        double totalSectorInvestment = 0;
+        for (Object object : stockList.values()) {
+            Stock_blob stockBlob = (Stock_blob) object;
+            String shareSector = stockBlob.getSector();
+            if (sector.equals(shareSector)){
+                String shareSymbol = stockBlob.getSymbol();
+                switch (shareSymbol){
+                    case "TRIG.L", "BSIF.L" ->
+                            totalSectorInvestment += stockBlob.getInvestment()*getExchangeRateGBP();
+                    case "MC.PA" ->
+                            totalSectorInvestment += stockBlob.getInvestment()*getExchangeRateEUR();
+                    case "ENB" ->
+                            totalSectorInvestment += stockBlob.getInvestment()*getExchangeRateCAD();
+                    default ->
+                            totalSectorInvestment += stockBlob.getInvestment();
+                }
+            }
+        }
+        return (getTotalInvested() * totalSectorInvestment) / 100;
+    }
 }

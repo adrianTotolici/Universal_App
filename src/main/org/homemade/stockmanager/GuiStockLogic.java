@@ -50,8 +50,6 @@ public class GuiStockLogic extends Component {
     private JLabel totalInvestedValue;
     private JLabel totalProfitLabel;
     private JLabel totalProfitValue;
-    private JLabel totalProfitRonLabel;
-    private JLabel totalProfitRonValue;
     private JLabel totalTaxLabel;
     private JLabel totalTaxValue;
     private JLabel consumerCyclicalLabel;
@@ -88,7 +86,6 @@ public class GuiStockLogic extends Component {
 
         totalInvestedLabel.setText(DefaultLang.totalInvestmentLabel);
         totalProfitLabel.setText(DefaultLang.totalProfitLabel);
-        totalProfitRonLabel.setText(DefaultLang.totalProfitRonLabel);
         totalTaxLabel.setText(DefaultLang.totalTaxLabel);
 
         consumerCyclicalLabel.setText(DefaultLang.consumerCyclicalLabel);
@@ -164,6 +161,17 @@ public class GuiStockLogic extends Component {
                     tax = (profit * Constants.USAIncomeTax) / 100;
                     profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateCAD();
                     currencySymbol = "c$";
+                }
+                case  "TSM" -> {
+                    if (importData) {
+                        investment = stockBlob.getInvestment();
+                    }else {
+                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateRON();
+                    }
+                    profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
+                    tax = (profit * Constants.TWIncomeTax) / 100;
+                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateRON();
+                    currencySymbol = "$";
                 }
                 default -> {
                     if (importData) {
@@ -346,8 +354,11 @@ public class GuiStockLogic extends Component {
     }
 
     public void initGeneralShareInfo(){
-        totalInvestedValue.setText(Constants.currencyFormat.format(Logic.getInstance().getTotalInvested()));
+        totalInvestedValue.setText(Constants.currencyFormat.format(Logic.getInstance().getTotalInvested()*Logic.getInstance().getExchangeRateRON()) + " RON");
+        totalProfitValue.setText(Constants.currencyFormat.format(Logic.getInstance().getTotalProfit()*Logic.getInstance().getExchangeRateRON()) + " RON");
+        totalTaxValue.setText(Constants.currencyFormat.format(Logic.getInstance().getTotalTax()*Logic.getInstance().getExchangeRateRON()) + " RON");
 
+        consumerCyclicalProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(Constants.sectorComboBoxList[0])) + " %");
     }
 
     public void populateEditPanel(@NotNull Stock_blob stockBlob){
