@@ -355,6 +355,6 @@ public class Logic {
                 }
             }
         }
-        return (getTotalInvested() * totalSectorInvestment) / 100;
+        return (totalSectorInvestment * 100) / getTotalInvested();
     }
 }
