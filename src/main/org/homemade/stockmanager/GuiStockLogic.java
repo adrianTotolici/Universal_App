@@ -54,6 +54,26 @@ public class GuiStockLogic extends Component {
     private JLabel totalTaxValue;
     private JLabel consumerCyclicalLabel;
     private JLabel consumerCyclicalProcent;
+    private JLabel consumerDefensiveLabel;
+    private JLabel consumerDefensiveProcent;
+    private JLabel energyLabel;
+    private JLabel energyProcent;
+    private JLabel financialServicesLabel;
+    private JLabel financialServicesProcent;
+    private JLabel industrialLabel;
+    private JLabel industrialProcent;
+    private JLabel realEstateLabel;
+    private JLabel realEstateProcent;
+    private JLabel technologyLabel;
+    private JLabel technologyProcent;
+    private JLabel healthcareLabel;
+    private JLabel healthcareProcent;
+    private JLabel communicationServicesLabel;
+    private JLabel communicationServicesProcent;
+    private JLabel utilitiesLabel;
+    private JLabel utilitiesProcent;
+    private JLabel basicMaterialsLabel;
+    private JLabel basicMaterialsProcent;
     private JFileChooser xmlImporter;
     private JFileChooser pathLocation;
     private JMenu menu;
@@ -89,6 +109,16 @@ public class GuiStockLogic extends Component {
         totalTaxLabel.setText(DefaultLang.totalTaxLabel);
 
         consumerCyclicalLabel.setText(DefaultLang.consumerCyclicalLabel);
+        consumerDefensiveLabel.setText(DefaultLang.consumerDefensiveLabel);
+        energyLabel.setText(DefaultLang.energyLabel);
+        financialServicesLabel.setText(DefaultLang.financialServicesLabel);
+        industrialLabel.setText(DefaultLang.industrialLabel);
+        realEstateLabel.setText(DefaultLang.realEstateLabel);
+        technologyLabel.setText(DefaultLang.technologyLabel);
+        healthcareLabel.setText(DefaultLang.healthcareLabel);
+        communicationServicesLabel.setText(DefaultLang.communicationServicesLabel);
+        utilitiesLabel.setText(DefaultLang.utilitiesLabel);
+        basicMaterialsLabel.setText(DefaultLang.basicMaterialsLabel);
 
         stockPanel.setVisible(true);
 
@@ -197,6 +227,8 @@ public class GuiStockLogic extends Component {
             row[8] = Constants.currencyFormat.format(profitRON)+" RON";
             model.addRow(row);
         }
+
+        initGeneralShareInfo();
     }
 
     public void init(){
@@ -204,7 +236,6 @@ public class GuiStockLogic extends Component {
         showStockPanel();
         initMenuBar();
         showStockTable();
-        initGeneralShareInfo();
         editStockPanel.setVisible(false);
         exitButton.addActionListener(e -> {
             Utils.Log("Call Main Menu GUI.");
@@ -221,7 +252,6 @@ public class GuiStockLogic extends Component {
                 File file = xmlImporter.getSelectedFile();
                 Logic.getInstance().readXLSX(file.getAbsolutePath());
                 updateStockTable(true);
-
             }
             enableButtons();
         });
@@ -358,7 +388,17 @@ public class GuiStockLogic extends Component {
         totalProfitValue.setText(Constants.currencyFormat.format(Logic.getInstance().getTotalProfit()*Logic.getInstance().getExchangeRateRON()) + " RON");
         totalTaxValue.setText(Constants.currencyFormat.format(Logic.getInstance().getTotalTax()*Logic.getInstance().getExchangeRateRON()) + " RON");
 
-        consumerCyclicalProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(Constants.sectorComboBoxList[0])) + " %");
+        consumerCyclicalProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.consumerCyclicalLabel)) + " %");
+        consumerDefensiveProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.consumerDefensiveLabel)) + " %");
+        industrialProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.industrialLabel)) + " %");
+        energyProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.energyLabel)) + " %");
+        financialServicesProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.financialServicesLabel)) + " %");
+        realEstateProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.realEstateLabel)) + " %");
+        technologyProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.technologyLabel)) + " %");
+        healthcareProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.healthcareLabel)) + " %");
+        utilitiesProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.utilitiesLabel)) + " %");
+        basicMaterialsProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.basicMaterialsLabel)) + " %");
+        communicationServicesProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.communicationServicesLabel)) + " %");
     }
 
     public void populateEditPanel(@NotNull Stock_blob stockBlob){

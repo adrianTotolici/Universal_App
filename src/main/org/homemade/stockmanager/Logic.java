@@ -312,6 +312,7 @@ public class Logic {
                         totalProfit += stockBlob.getDivPerQ();
             }
         }
+        Utils.Log("Total profit: "+totalProfit+" $");
         return totalProfit;
     }
 
@@ -333,6 +334,7 @@ public class Logic {
                         totalTax += ((stockBlob.getDivPerQ())*Constants.USAIncomeTax) / 100;
             }
         }
+        Utils.Log("Total tax: "+totalTax+" $");
         return totalTax;
     }
 
@@ -355,6 +357,8 @@ public class Logic {
                 }
             }
         }
-        return (totalSectorInvestment * 100) / getTotalInvested();
+        double percent = (totalSectorInvestment * 100) / getTotalInvested();
+        Utils.Log("Investment percent in "+sector+" sector: "+Constants.currencyFormat.format(percent)+" %");
+        return percent;
     }
 }
