@@ -32,15 +32,22 @@ public class Logic {
     private final boolean development = true;
     private static String stockFilePath;
 
-    public static Logic getFirstInstance(String filePath){
-        if (instance == null) {
-            stockFilePath = filePath;
-            instance = new Logic();
-        }
-        return instance;
+//    public static Logic getFirstInstance(String filePath){
+//        if (instance == null) {
+//            stockFilePath = filePath;
+//            instance = new Logic();
+//        }
+//        return instance;
+//    }
+
+    public void setStockFilePath(String filePath){
+        stockFilePath = filePath;
     }
 
     public static Logic getInstance(){
+        if (instance == null){
+            instance = new Logic();
+        }
         return instance;
     }
 
@@ -50,7 +57,7 @@ public class Logic {
 
     private void init(){
         try {
-            Path stockFile = Path.of(stockFilePath);
+            Path stockFile = Path.of(Constants.stockFilePath);
             if  ( ! Files.exists(stockFile)) {
                 Files.createDirectories(stockFile.getParent());
                 Files.createFile(stockFile);
@@ -273,7 +280,7 @@ public class Logic {
     }
 
     public void saveStock() {
-        Utils.saveData(stockList, Constants.stockFilePath);
+        Utils.saveData(stockList, stockFilePath);
         Utils.Log("The Object  was successfully written to a file");
     }
 

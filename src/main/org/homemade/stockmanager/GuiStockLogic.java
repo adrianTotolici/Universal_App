@@ -232,7 +232,7 @@ public class GuiStockLogic extends Component {
     }
 
     public void init(){
-        Logic.getFirstInstance(Constants.stockFilePath);
+        Logic.getInstance().setStockFilePath(Constants.stockFilePath);
         showStockPanel();
         initMenuBar();
         showStockTable();

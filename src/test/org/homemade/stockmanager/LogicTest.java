@@ -13,8 +13,10 @@ import java.util.HashMap;
 public class LogicTest {
 
     public static String TEST_STOCK = "AMD";
+    public static String TEST_SECOND_STOCK = "INTC";
     public static String INVALID_TEST_STOCK = "TEST";
     public static String TEST_INDUSTRY_VALUE = "Semiconductors";
+    public static double TEST_INVESTMENT_VALUE = 23;
 
     public static String TEST_STOCK_FILE_PATH = "src/test/resources/stock_file";
     public static String TEST_STOCK_FILE_DIVIDEND_PATH = "src/test/resources/Dividende_test.xlsx";
@@ -31,124 +33,130 @@ public class LogicTest {
     }
 
     @Test
-    public void getFirstInstance(){
-        Logic firstCallInstance = Logic.getFirstInstance(TEST_SAVE_STOCK_FILE);
-        Logic secondCallInstance = Logic.getInstance();
-
-        Assertions.assertSame(firstCallInstance, secondCallInstance);
-    }
-
-    @Test
     public void getExchangeRateRon(){
-        Assertions.assertEquals(Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRate(Constants.Ron), Logic.getInstance().getExchangeRateRON());
+        Assertions.assertEquals(Logic.getInstance().getExchangeRate(Constants.Ron), Logic.getInstance().getExchangeRateRON());
     }
 
     @Test
     public void getExchangeRateEUR(){
-        Assertions.assertEquals(Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRate(Constants.Euro), Logic.getInstance().getExchangeRateEUR());
+        Assertions.assertEquals(Logic.getInstance().getExchangeRate(Constants.Euro), Logic.getInstance().getExchangeRateEUR());
     }
 
     @Test
     public void getExchangeRateCAD(){
-        Assertions.assertEquals(Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRate(Constants.CanadianDollar), Logic.getInstance().getExchangeRateCAD());
+        Assertions.assertEquals(Logic.getInstance().getExchangeRate(Constants.CanadianDollar), Logic.getInstance().getExchangeRateCAD());
     }
 
     @Test
     public void getExchangeRateGBP(){
-        Assertions.assertEquals(Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRate(Constants.Pounds), Logic.getInstance().getExchangeRateGBP());
+        Assertions.assertEquals(Logic.getInstance().getExchangeRate(Constants.Pounds), Logic.getInstance().getExchangeRateGBP());
     }
 
     @Test
     public void getStock(){
-        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getStock(TEST_STOCK);
-        Stock_blob stockBlob = Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getAddedStock(TEST_STOCK);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().getStock(TEST_STOCK);
+        Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         Assertions.assertEquals(TEST_STOCK, stockBlob.getSymbol().toUpperCase());
+        Logic.getInstance().removeAllStock();
     }
 
     @Test
     public void loadStockData(){
-        HashMap<String, Stock_blob> stockBlob = Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).loadStockData(TEST_STOCK_FILE_PATH);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().getStock(TEST_STOCK);
+        HashMap<String, Stock_blob> stockBlob = Logic.getInstance().loadStockData(TEST_STOCK_FILE_PATH);
         Assertions.assertNotNull(stockBlob.get(TEST_STOCK));
+        Logic.getInstance().removeAllStock();
     }
 
     @Test
     public void getAddedStock(){
-        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getStock(TEST_STOCK);
-        Stock_blob stockBlob = Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getAddedStock(TEST_STOCK);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().getStock(TEST_STOCK);
+        Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         Assertions.assertEquals(TEST_STOCK, stockBlob.getSymbol());
 
-        stockBlob = Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getAddedStock(INVALID_TEST_STOCK);
+        stockBlob = Logic.getInstance().getAddedStock(INVALID_TEST_STOCK);
         Assertions.assertNull(stockBlob);
+        Logic.getInstance().removeAllStock();
     }
 
     @Test
     public void updateStock(){
-        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getStock(TEST_STOCK);
-        Stock_blob stockBlob = Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getAddedStock(TEST_STOCK);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().getStock(TEST_STOCK);
+        Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         stockBlob.setIndustry(TEST_INDUSTRY_VALUE);
 
-        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).updateStock(stockBlob);
-        Stock_blob stockBlobUpdated = Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getAddedStock(TEST_STOCK);
+        Logic.getInstance().updateStock(stockBlob);
+        Stock_blob stockBlobUpdated = Logic.getInstance().getAddedStock(TEST_STOCK);
 
         Assertions.assertSame(stockBlob, stockBlobUpdated);
         Assertions.assertEquals(TEST_INDUSTRY_VALUE, stockBlobUpdated.getIndustry());
+        Logic.getInstance().removeAllStock();
     }
 
     @Test
     public void removeStock(){
-        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getAddedStock(TEST_STOCK);
-        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).removeStock(TEST_STOCK);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().getAddedStock(TEST_STOCK);
+        Logic.getInstance().removeStock(TEST_STOCK);
 
-        Stock_blob stockBlob = Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getAddedStock(TEST_STOCK);
+        Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         Assertions.assertNull(stockBlob);
+        Logic.getInstance().removeAllStock();
     }
 
     @Test
     public void getExchangeRate(){
-        Assertions.assertTrue(Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRate(Constants.Euro)>0);
-        Assertions.assertEquals(1, Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRate("USD"));
+        Assertions.assertTrue(Logic.getInstance().getExchangeRate(Constants.Euro)>0);
+        Assertions.assertEquals(1, Logic.getInstance().getExchangeRate("USD"));
     }
 
     @Test
     public void readXLSX(){
-        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).readXLSX(TEST_STOCK_FILE_DIVIDEND_PATH);
-        Stock_blob stockBlob = Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getAddedStock(TEST_STOCK);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().readXLSX(TEST_STOCK_FILE_DIVIDEND_PATH);
+        Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         Assertions.assertEquals(stockBlob.getSymbol(), TEST_STOCK);
         Assertions.assertEquals(0.625, stockBlob.getDivPerQ());
+        Logic.getInstance().removeAllStock();
     }
 
     @Test
     public void removeAllStock(){
-        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getStock(TEST_STOCK);
-        Stock_blob stockBlob = Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getAddedStock(TEST_STOCK);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().getStock(TEST_STOCK);
+        Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         Assertions.assertEquals(TEST_STOCK, stockBlob.getSymbol().toUpperCase());
 
-        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).removeAllStock();
-        Assertions.assertNull(Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getAddedStock(TEST_STOCK));
+        Logic.getInstance().removeAllStock();
+        Assertions.assertNull(Logic.getInstance().getAddedStock(TEST_STOCK));
     }
 
     @Test
     public void getExchangeRates(){
-        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRates();
-        Assertions.assertTrue(0 < Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRateRON());
-        Assertions.assertTrue(0 < Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRateCAD());
-        Assertions.assertTrue(0 < Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRateEUR());
-        Assertions.assertTrue(0 < Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getExchangeRateGBP());
+        Logic.getInstance().getExchangeRates();
+        Assertions.assertTrue(0 < Logic.getInstance().getExchangeRateRON());
+        Assertions.assertTrue(0 < Logic.getInstance().getExchangeRateCAD());
+        Assertions.assertTrue(0 < Logic.getInstance().getExchangeRateEUR());
+        Assertions.assertTrue(0 < Logic.getInstance().getExchangeRateGBP());
     }
 
     @Test
     public void saveStock(){
-        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getStock(TEST_STOCK);
-        Stock_blob stockBlob = Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).getAddedStock(TEST_STOCK);
-        Assertions.assertEquals(TEST_STOCK, stockBlob.getSymbol());
 
         File testLocation = new File(TEST_NEW_DIRECTORY_LOCATION);
         testLocation.mkdirs();
         Path path = Paths.get(TEST_NEW_DIRECTORY_LOCATION);
         Assertions.assertTrue(Files.exists(path));
 
-        Constants.setStockFilePath(TEST_NEW_DIRECTORY_LOCATION);
-        Logic.getFirstInstance(TEST_SAVE_STOCK_FILE).saveStock();
+        Logic.getInstance().setStockFilePath(TEST_NEW_DIRECTORY_LOCATION+"/stock_file");
+        Logic.getInstance().getStock(TEST_STOCK);
+        Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
+        Assertions.assertEquals(TEST_STOCK, stockBlob.getSymbol());
+        Logic.getInstance().removeAllStock();
 
         File testFileLocation = new File(TEST_NEW_DIRECTORY_LOCATION+"/stock_file");
         Path filePath = Paths.get(TEST_NEW_DIRECTORY_LOCATION+"/stock_file");
@@ -169,7 +177,23 @@ public class LogicTest {
         }
 
         Assertions.assertFalse(Files.exists(path));
+    }
 
-        Constants.setStockFilePath("src/test/resources");
+    @Test
+    public void getTotalInvested(){
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().getStock(TEST_STOCK);
+        Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
+        stockBlob.setInvestment(TEST_INVESTMENT_VALUE);
+        Logic.getInstance().updateStock(stockBlob);
+
+
+        Logic.getInstance().getStock(TEST_SECOND_STOCK);
+        Stock_blob secondStockBlob = Logic.getInstance().getAddedStock(TEST_SECOND_STOCK);
+        secondStockBlob.setInvestment(TEST_INVESTMENT_VALUE);
+        Logic.getInstance().updateStock(stockBlob);
+
+        Assertions.assertEquals(Logic.getInstance().getTotalInvested(), TEST_INVESTMENT_VALUE+TEST_INVESTMENT_VALUE);
+        Logic.getInstance().removeAllStock();
     }
 }
