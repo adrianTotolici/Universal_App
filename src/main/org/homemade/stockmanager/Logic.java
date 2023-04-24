@@ -32,14 +32,6 @@ public class Logic {
     private final boolean development = true;
     private static String stockFilePath;
 
-//    public static Logic getFirstInstance(String filePath){
-//        if (instance == null) {
-//            stockFilePath = filePath;
-//            instance = new Logic();
-//        }
-//        return instance;
-//    }
-
     public void setStockFilePath(String filePath){
         stockFilePath = filePath;
     }
@@ -345,7 +337,7 @@ public class Logic {
         return totalTax;
     }
 
-    public double getInvestmentDistribution(String sector){
+    public double getInvestmentPercent(String sector){
         double totalSectorInvestment = 0;
         for (Object object : stockList.values()) {
             Stock_blob stockBlob = (Stock_blob) object;

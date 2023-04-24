@@ -388,17 +388,17 @@ public class GuiStockLogic extends Component {
         totalProfitValue.setText(Constants.currencyFormat.format(Logic.getInstance().getTotalProfit()*Logic.getInstance().getExchangeRateRON()) + " RON");
         totalTaxValue.setText(Constants.currencyFormat.format(Logic.getInstance().getTotalTax()*Logic.getInstance().getExchangeRateRON()) + " RON");
 
-        consumerCyclicalProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.consumerCyclicalLabel)) + " %");
-        consumerDefensiveProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.consumerDefensiveLabel)) + " %");
-        industrialProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.industrialLabel)) + " %");
-        energyProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.energyLabel)) + " %");
-        financialServicesProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.financialServicesLabel)) + " %");
-        realEstateProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.realEstateLabel)) + " %");
-        technologyProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.technologyLabel)) + " %");
-        healthcareProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.healthcareLabel)) + " %");
-        utilitiesProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.utilitiesLabel)) + " %");
-        basicMaterialsProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.basicMaterialsLabel)) + " %");
-        communicationServicesProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentDistribution(DefaultLang.communicationServicesLabel)) + " %");
+        consumerCyclicalProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.consumerCyclicalLabel)) + " %");
+        consumerDefensiveProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.consumerDefensiveLabel)) + " %");
+        industrialProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.industrialLabel)) + " %");
+        energyProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.energyLabel)) + " %");
+        financialServicesProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.financialServicesLabel)) + " %");
+        realEstateProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.realEstateLabel)) + " %");
+        technologyProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.technologyLabel)) + " %");
+        healthcareProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.healthcareLabel)) + " %");
+        utilitiesProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.utilitiesLabel)) + " %");
+        basicMaterialsProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.basicMaterialsLabel)) + " %");
+        communicationServicesProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.communicationServicesLabel)) + " %");
     }
 
     public void populateEditPanel(@NotNull Stock_blob stockBlob){
