@@ -32,15 +32,14 @@ public class Logic {
     private final boolean development = true;
     private static String stockFilePath;
 
-    public static Logic getFirstInstance(String filePath){
-        if (instance == null) {
-            stockFilePath = filePath;
-            instance = new Logic();
-        }
-        return instance;
+    public void setStockFilePath(String filePath){
+        stockFilePath = filePath;
     }
 
     public static Logic getInstance(){
+        if (instance == null){
+            instance = new Logic();
+        }
         return instance;
     }
 
@@ -50,7 +49,7 @@ public class Logic {
 
     private void init(){
         try {
-            Path stockFile = Path.of(stockFilePath);
+            Path stockFile = Path.of(Constants.stockFilePath);
             if  ( ! Files.exists(stockFile)) {
                 Files.createDirectories(stockFile.getParent());
                 Files.createFile(stockFile);
@@ -273,8 +272,92 @@ public class Logic {
     }
 
     public void saveStock() {
-        Utils.saveData(stockList, Constants.stockFilePath);
+        Utils.saveData(stockList, stockFilePath);
         Utils.Log("The Object  was successfully written to a file");
     }
 
+    public double getTotalInvested(){
+        double totalInvested = 0;
+        for (Object object : stockList.values()) {
+            Stock_blob stockBlob = (Stock_blob) object;
+            String shareSymbol = stockBlob.getSymbol();
+            switch (shareSymbol){
+                case "TRIG.L", "BSIF.L" ->
+                    totalInvested += stockBlob.getInvestment()*getExchangeRateGBP();
+                case "MC.PA" ->
+                    totalInvested += stockBlob.getInvestment()*getExchangeRateEUR();
+                case "ENB" ->
+                    totalInvested += stockBlob.getInvestment()*getExchangeRateCAD();
+                default ->
+                    totalInvested += stockBlob.getInvestment();
+            }
+        }
+        return totalInvested;
+    }
+
+    public double getTotalProfit(){
+        double totalProfit = 0;
+        for (Object object : stockList.values()) {
+            Stock_blob stockBlob = (Stock_blob) object;
+            String shareSymbol = stockBlob.getSymbol();
+            switch (shareSymbol){
+                case "TRIG.L", "BSIF.L" ->
+                        totalProfit += stockBlob.getDivPerQ()*getExchangeRateGBP();
+                case "MC.PA" ->
+                        totalProfit += stockBlob.getDivPerQ()*getExchangeRateEUR();
+                case "ENB" ->
+                        totalProfit += stockBlob.getDivPerQ()*getExchangeRateCAD();
+                default ->
+                        totalProfit += stockBlob.getDivPerQ();
+            }
+        }
+        Utils.Log("Total profit: "+totalProfit+" $");
+        return totalProfit;
+    }
+
+    public double getTotalTax(){
+        double totalTax = 0;
+        for (Object object : stockList.values()) {
+            Stock_blob stockBlob = (Stock_blob) object;
+            String shareSymbol = stockBlob.getSymbol();
+            switch (shareSymbol){
+                case "TRIG.L", "BSIF.L" ->
+                        totalTax += ((stockBlob.getDivPerQ()*Constants.GBIncomeTax) / 100)*getExchangeRateGBP();
+                case "MC.PA" ->
+                        totalTax += ((stockBlob.getDivPerQ()*Constants.FRIncomeTax) / 100)*getExchangeRateEUR();
+                case "ENB" ->
+                        totalTax += ((stockBlob.getDivPerQ()*Constants.USAIncomeTax) / 100)*getExchangeRateCAD();
+                case "TSM" ->
+                        totalTax += ((stockBlob.getDivPerQ())*Constants.TWIncomeTax) / 100;
+                default ->
+                        totalTax += ((stockBlob.getDivPerQ())*Constants.USAIncomeTax) / 100;
+            }
+        }
+        Utils.Log("Total tax: "+totalTax+" $");
+        return totalTax;
+    }
+
+    public double getInvestmentPercent(String sector){
+        double totalSectorInvestment = 0;
+        for (Object object : stockList.values()) {
+            Stock_blob stockBlob = (Stock_blob) object;
+            String shareSector = stockBlob.getSector();
+            if (sector.equals(shareSector)){
+                String shareSymbol = stockBlob.getSymbol();
+                switch (shareSymbol){
+                    case "TRIG.L", "BSIF.L" ->
+                            totalSectorInvestment += stockBlob.getInvestment()*getExchangeRateGBP();
+                    case "MC.PA" ->
+                            totalSectorInvestment += stockBlob.getInvestment()*getExchangeRateEUR();
+                    case "ENB" ->
+                            totalSectorInvestment += stockBlob.getInvestment()*getExchangeRateCAD();
+                    default ->
+                            totalSectorInvestment += stockBlob.getInvestment();
+                }
+            }
+        }
+        double percent = (totalSectorInvestment * 100) / getTotalInvested();
+        Utils.Log("Investment percent in "+sector+" sector: "+Constants.currencyFormat.format(percent)+" %");
+        return percent;
+    }
 }
