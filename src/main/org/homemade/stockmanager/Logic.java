@@ -360,4 +360,23 @@ public class Logic {
         Utils.Log("Investment percent in "+sector+" sector: "+Constants.currencyFormat.format(percent)+" %");
         return percent;
     }
+
+    public double getShareTax(String shareSymbol){
+        double tax = 0;
+        Stock_blob stockBlob = getAddedStock(shareSymbol);
+        switch (shareSymbol){
+            case "TRIG.L", "BSIF.L" ->
+                    tax = ((stockBlob.getDivPerQ()*Constants.GBIncomeTax) / 100)*getExchangeRateGBP();
+            case "MC.PA" ->
+                    tax = ((stockBlob.getDivPerQ()*Constants.FRIncomeTax) / 100)*getExchangeRateEUR();
+            case "ENB" ->
+                    tax = ((stockBlob.getDivPerQ()*Constants.USAIncomeTax) / 100)*getExchangeRateCAD();
+            case "TSM" ->
+                    tax = ((stockBlob.getDivPerQ())*Constants.TWIncomeTax) / 100;
+            default ->
+                    tax = ((stockBlob.getDivPerQ())*Constants.USAIncomeTax) / 100;
+        }
+        Utils.Log("Tax for "+shareSymbol+" : "+tax+" $");
+        return tax;
+    }
 }

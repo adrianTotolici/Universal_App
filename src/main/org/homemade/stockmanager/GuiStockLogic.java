@@ -6,6 +6,8 @@ import org.homemade.stockmanager.blobs.Stock_blob;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
@@ -53,27 +55,41 @@ public class GuiStockLogic extends Component {
     private JLabel totalTaxLabel;
     private JLabel totalTaxValue;
     private JLabel consumerCyclicalLabel;
-    private JLabel consumerCyclicalProcent;
+    private JLabel consumerCyclicalPercent;
     private JLabel consumerDefensiveLabel;
-    private JLabel consumerDefensiveProcent;
+    private JLabel consumerDefensivePercent;
     private JLabel energyLabel;
-    private JLabel energyProcent;
+    private JLabel energyPercent;
     private JLabel financialServicesLabel;
-    private JLabel financialServicesProcent;
+    private JLabel financialServicesPercent;
     private JLabel industrialLabel;
-    private JLabel industrialProcent;
+    private JLabel industrialPercent;
     private JLabel realEstateLabel;
-    private JLabel realEstateProcent;
+    private JLabel realEstatePercent;
     private JLabel technologyLabel;
-    private JLabel technologyProcent;
+    private JLabel technologyPercent;
     private JLabel healthcareLabel;
-    private JLabel healthcareProcent;
+    private JLabel healthcarePercent;
     private JLabel communicationServicesLabel;
-    private JLabel communicationServicesProcent;
+    private JLabel communicationServicesPercent;
     private JLabel utilitiesLabel;
-    private JLabel utilitiesProcent;
+    private JLabel utilitiesPercent;
     private JLabel basicMaterialsLabel;
-    private JLabel basicMaterialsProcent;
+    private JLabel basicMaterialsPercent;
+    private JLabel shareSelectedLabel;
+    private JLabel shareInvestmentLabel;
+    private JLabel shareInvestmentValue;
+    private JLabel shareTaxLabel;
+    private JLabel shareTaxValue;
+    private JLabel shareProfitLabel;
+    private JLabel shareProfitValue;
+    private JLabel shareAnnouncementLabel;
+    private JLabel shareAnnouncementValue;
+    private JLabel shareExDividendLabel;
+    private JLabel shareExDividendValue;
+    private JLabel sharePayDayLabel;
+    private JLabel sharePayDayValue;
+    private JPanel shareDetailInformationPanel;
     private JFileChooser xmlImporter;
     private JFileChooser pathLocation;
     private JMenu menu;
@@ -137,6 +153,7 @@ public class GuiStockLogic extends Component {
         DefaultTableModel tableModel = new DefaultTableModel(data,Constants.columnNamesStockTable);
         stockTable = new JTable(tableModel);
         viewStockTable.getViewport().add(stockTable);
+
         Utils.Log("Initialize stock table.");
         updateStockTable(false);
         Utils.Log("Update stocks table values.");
@@ -236,6 +253,7 @@ public class GuiStockLogic extends Component {
         showStockPanel();
         initMenuBar();
         showStockTable();
+        shareDetailInformationPanel.setVisible(false);
         editStockPanel.setVisible(false);
         exitButton.addActionListener(e -> {
             Utils.Log("Call Main Menu GUI.");
@@ -344,6 +362,16 @@ public class GuiStockLogic extends Component {
             }
         });
 
+        ListSelectionModel rowSelectionModel = stockTable.getSelectionModel();
+        rowSelectionModel.addListSelectionListener(e -> {
+            if (! rowSelectionModel.isSelectionEmpty()) {
+                int selectedRow = stockTable.getSelectedRow();
+                String selectedData = (String) stockTable.getValueAt(selectedRow, 0);
+                System.out.println("Selected: " + selectedData);
+                initShareDetailInformation(selectedData);
+            }
+        });
+
     }
 
     public void initEditPanel(){
@@ -388,17 +416,38 @@ public class GuiStockLogic extends Component {
         totalProfitValue.setText(Constants.currencyFormat.format(Logic.getInstance().getTotalProfit()*Logic.getInstance().getExchangeRateRON()) + " RON");
         totalTaxValue.setText(Constants.currencyFormat.format(Logic.getInstance().getTotalTax()*Logic.getInstance().getExchangeRateRON()) + " RON");
 
-        consumerCyclicalProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.consumerCyclicalLabel)) + " %");
-        consumerDefensiveProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.consumerDefensiveLabel)) + " %");
-        industrialProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.industrialLabel)) + " %");
-        energyProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.energyLabel)) + " %");
-        financialServicesProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.financialServicesLabel)) + " %");
-        realEstateProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.realEstateLabel)) + " %");
-        technologyProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.technologyLabel)) + " %");
-        healthcareProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.healthcareLabel)) + " %");
-        utilitiesProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.utilitiesLabel)) + " %");
-        basicMaterialsProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.basicMaterialsLabel)) + " %");
-        communicationServicesProcent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.communicationServicesLabel)) + " %");
+        consumerCyclicalPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.consumerCyclicalLabel)) + " %");
+        consumerDefensivePercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.consumerDefensiveLabel)) + " %");
+        industrialPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.industrialLabel)) + " %");
+        energyPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.energyLabel)) + " %");
+        financialServicesPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.financialServicesLabel)) + " %");
+        realEstatePercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.realEstateLabel)) + " %");
+        technologyPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.technologyLabel)) + " %");
+        healthcarePercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.healthcareLabel)) + " %");
+        utilitiesPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.utilitiesLabel)) + " %");
+        basicMaterialsPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.basicMaterialsLabel)) + " %");
+        communicationServicesPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.communicationServicesLabel)) + " %");
+    }
+
+    public void initShareDetailInformation(String shareSelected){
+
+        shareDetailInformationPanel.setVisible(true);
+        shareInvestmentLabel.setText(DefaultLang.shareInvestmentLabel);
+        shareTaxLabel.setText(DefaultLang.shareTaxLabel);
+        shareProfitLabel.setText(DefaultLang.shareProfitLabel);
+        shareAnnouncementLabel.setText(DefaultLang.shareAnnouncementLabel);
+        shareExDividendLabel.setText(DefaultLang.shareExDividendLabel);
+        sharePayDayLabel.setText(DefaultLang.sharePayDayLabel);
+
+        Stock_blob stockBlob = Logic.getInstance().getAddedStock(shareSelected);
+
+        shareSelectedLabel.setText(stockBlob.getName());
+        shareInvestmentValue.setText(Constants.dividendPayFormat.format(stockBlob.getInvestment()* Logic.getInstance().getExchangeRateRON())+" RON");
+        shareTaxValue.setText(Constants.dividendPayFormat.format(Logic.getInstance().getShareTax(shareSelected)*Logic.getInstance().getExchangeRateRON())+" RON");
+        shareProfitValue.setText(Constants.dividendPayFormat.format(stockBlob.getDivPerQ()*Logic.getInstance().getExchangeRateRON())+ " RON");
+        shareAnnouncementValue.setText("-");
+        shareExDividendValue.setText("-");
+        sharePayDayValue.setText("-");
     }
 
     public void populateEditPanel(@NotNull Stock_blob stockBlob){
@@ -486,6 +535,7 @@ public class GuiStockLogic extends Component {
         removeAllButton.setEnabled(true);
         removeButton.setEnabled(true);
     }
+
 }
 
 
