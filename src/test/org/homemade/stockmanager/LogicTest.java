@@ -1,6 +1,5 @@
 package org.homemade.stockmanager;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.homemade.stockmanager.blobs.Stock_blob;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -10,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+
+import static org.homemade.stockmanager.Constants.USAIncomeTax;
 
 public class LogicTest {
 
@@ -245,32 +246,37 @@ public class LogicTest {
         Logic.getInstance().getStock(TEST_STOCK);
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         stockBlob.setDivPerQ(TEST_DIVIDEND_PERQ);
+        stockBlob.setOwnShares(1);
         Logic.getInstance().updateStock(stockBlob);
 
         Logic.getInstance().getStock(TEST_SECOND_STOCK);
         Stock_blob stockBlob1 = Logic.getInstance().getAddedStock(TEST_SECOND_STOCK);
         stockBlob1.setDivPerQ(TEST_DIVIDEND_PERQ);
+        stockBlob1.setOwnShares(1);
         Logic.getInstance().updateStock(stockBlob1);
 
         Logic.getInstance().getStock(TEST_EUR_STOCK);
         Stock_blob stockBlob2 = Logic.getInstance().getAddedStock(TEST_EUR_STOCK);
         stockBlob2.setDivPerQ(TEST_DIVIDEND_PERQ);
+        stockBlob2.setOwnShares(1);
         Logic.getInstance().updateStock(stockBlob2);
 
         Logic.getInstance().getStock(TEST_GBP_STOCK);
         Stock_blob stockBlob3 = Logic.getInstance().getAddedStock(TEST_GBP_STOCK);
         stockBlob3.setDivPerQ(TEST_DIVIDEND_PERQ);
+        stockBlob3.setOwnShares(1);
         Logic.getInstance().updateStock(stockBlob3);
 
         Logic.getInstance().getStock(TEST_CAD_STOCK);
         Stock_blob stockBlob4 = Logic.getInstance().getAddedStock(TEST_CAD_STOCK);
         stockBlob4.setDivPerQ(TEST_DIVIDEND_PERQ);
+        stockBlob4.setOwnShares(1);
         Logic.getInstance().updateStock(stockBlob4);
 
-        double expectedTax = ((TEST_DIVIDEND_PERQ * 2) * Constants.USAIncomeTax) / 100;
+        double expectedTax = ((TEST_DIVIDEND_PERQ * 2) * USAIncomeTax) / 100;
         expectedTax += ((TEST_DIVIDEND_PERQ * Constants.FRIncomeTax) / 100) * Logic.getInstance().getExchangeRateEUR();
         expectedTax += ((TEST_DIVIDEND_PERQ * Constants.GBIncomeTax) / 100) * Logic.getInstance().getExchangeRateGBP();
-        expectedTax += ((TEST_DIVIDEND_PERQ * Constants.USAIncomeTax) / 100) * Logic.getInstance().getExchangeRateCAD();
+        expectedTax += ((TEST_DIVIDEND_PERQ * USAIncomeTax) / 100) * Logic.getInstance().getExchangeRateCAD();
 
         Assertions.assertEquals(Logic.getInstance().getTotalTax(), expectedTax);
         Logic.getInstance().removeAllStock();
@@ -303,5 +309,17 @@ public class LogicTest {
         Assertions.assertEquals(Logic.getInstance().getInvestmentPercent(Constants.sectorComboBoxList[2]), 25);
 
         Logic.getInstance().removeAllStock();
+    }
+
+    @Test
+    public void getShareTax(){
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().getStock(TEST_STOCK);
+        Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
+        stockBlob.setDivPerQ(10);
+        stockBlob.setOwnShares(1);
+        Logic.getInstance().updateStock(stockBlob);
+
+        Assertions.assertEquals(Logic.getInstance().getShareTax(TEST_STOCK), 1);
     }
 }

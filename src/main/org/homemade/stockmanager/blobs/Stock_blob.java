@@ -18,7 +18,9 @@ public class Stock_blob implements Serializable {
     private double divPerQ;
     private double ownShares;
     private double investment;
-    private Date payData;
+    private Date payDate;
+    private Date annoucementDate;
+    private Date exDividendDate;
 
     public Stock_blob(){}
 
@@ -86,11 +88,27 @@ public class Stock_blob implements Serializable {
         this.industry = industry;
     }
 
-    public Date getPayData() {
-        return payData;
+    public Date getPayDate() {
+        return payDate;
     }
 
-    public void setPayData(Date payData) {
-        this.payData = payData;
+    public void setPayDate(Date payDate) {
+        this.payDate = payDate;
+    }
+
+    public Date getAnnoucementDate() {
+        return annoucementDate;
+    }
+
+    public void setAnnouncementDate(Date annoucementDate) {
+        this.annoucementDate = annoucementDate;
+    }
+
+    public Date getExDividendDate() {
+        return exDividendDate;
+    }
+
+    public void setExDividendDate(Date exDividendDate) {
+        this.exDividendDate = exDividendDate;
     }
 }

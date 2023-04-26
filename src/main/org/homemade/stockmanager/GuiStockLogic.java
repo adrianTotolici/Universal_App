@@ -444,10 +444,10 @@ public class GuiStockLogic extends Component {
         shareSelectedLabel.setText(stockBlob.getName());
         shareInvestmentValue.setText(Constants.dividendPayFormat.format(stockBlob.getInvestment()* Logic.getInstance().getExchangeRateRON())+" RON");
         shareTaxValue.setText(Constants.dividendPayFormat.format(Logic.getInstance().getShareTax(shareSelected)*Logic.getInstance().getExchangeRateRON())+" RON");
-        shareProfitValue.setText(Constants.dividendPayFormat.format(stockBlob.getDivPerQ()*Logic.getInstance().getExchangeRateRON())+ " RON");
-        shareAnnouncementValue.setText("-");
-        shareExDividendValue.setText("-");
-        sharePayDayValue.setText("-");
+        shareProfitValue.setText(Constants.dividendPayFormat.format(stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Logic.getInstance().getExchangeRateRON())+ " RON");
+        shareAnnouncementValue.setText(String.valueOf(stockBlob.getAnnoucementDate()));
+        shareExDividendValue.setText(String.valueOf(stockBlob.getExDividendDate()));
+        sharePayDayValue.setText(String.valueOf(stockBlob.getPayDate()));
     }
 
     public void populateEditPanel(@NotNull Stock_blob stockBlob){
@@ -457,7 +457,7 @@ public class GuiStockLogic extends Component {
         divTextFiled.setText(String.valueOf(stockBlob.getDivPerQ()));
         ownShareTextField.setText(String.valueOf(stockBlob.getOwnShares()));
         sectorComboBox.setSelectedItem(stockBlob.getSector());
-        investmentTextField.setText(String.valueOf(stockBlob.getInvestment()));
+        investmentTextField.setText(Constants.dividendPayFormat.format(stockBlob.getInvestment()*Logic.getInstance().getExchangeRateRON()));
         industryComboBox.removeAllItems();
 
         if (null != Constants.industryComboBoxList.get(sectorComboBox.getModel().getSelectedItem())) {

@@ -464,7 +464,9 @@
               <grid row="1" column="4" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
             </constraints>
             <properties>
+              <background color="-2038554"/>
               <enabled value="true"/>
+              <foreground color="-2038554"/>
             </properties>
             <border type="none"/>
             <children>
