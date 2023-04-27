@@ -12,6 +12,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 
 import java.io.FileInputStream;
@@ -95,7 +97,6 @@ public class Logic {
             stockBlob.setName(stock.getName());
             stockBlob.setSymbol(stock.getSymbol());
             stockBlob.setValue(stock.getQuote(true).getPrice());
-            stockBlob.setAnnouncementDate(stock.getStats(true).getEarningsAnnouncement().getTime());
 
             if (! stockList.containsKey(stockBlob.getSymbol().toUpperCase())) {
                 stockList.put(stockBlob.getSymbol(), stockBlob);
