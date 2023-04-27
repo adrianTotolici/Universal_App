@@ -12,6 +12,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 
 import java.io.FileInputStream;
@@ -159,7 +161,7 @@ public class Logic {
         old_stock.setOwnShares(stockBlob.getOwnShares());
         old_stock.setInvestment(stockBlob.getInvestment());
         old_stock.setSector(stockBlob.getSector());
-        old_stock.setPayData(stockBlob.getPayData());
+        old_stock.setPayDate(stockBlob.getPayDate());
 
         if (stockList.get(stockBlob.getSymbol()) != null) {
             stockList.replace(stockBlob.getSymbol(), old_stock);
@@ -322,15 +324,15 @@ public class Logic {
             String shareSymbol = stockBlob.getSymbol();
             switch (shareSymbol){
                 case "TRIG.L", "BSIF.L" ->
-                        totalTax += ((stockBlob.getDivPerQ()*Constants.GBIncomeTax) / 100)*getExchangeRateGBP();
+                        totalTax += ((stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Constants.GBIncomeTax) / 100)*getExchangeRateGBP();
                 case "MC.PA" ->
-                        totalTax += ((stockBlob.getDivPerQ()*Constants.FRIncomeTax) / 100)*getExchangeRateEUR();
+                        totalTax += ((stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Constants.FRIncomeTax) / 100)*getExchangeRateEUR();
                 case "ENB" ->
-                        totalTax += ((stockBlob.getDivPerQ()*Constants.USAIncomeTax) / 100)*getExchangeRateCAD();
+                        totalTax += ((stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Constants.USAIncomeTax) / 100)*getExchangeRateCAD();
                 case "TSM" ->
-                        totalTax += ((stockBlob.getDivPerQ())*Constants.TWIncomeTax) / 100;
+                        totalTax += ((stockBlob.getDivPerQ())*stockBlob.getOwnShares()*Constants.TWIncomeTax) / 100;
                 default ->
-                        totalTax += ((stockBlob.getDivPerQ())*Constants.USAIncomeTax) / 100;
+                        totalTax += ((stockBlob.getDivPerQ())*stockBlob.getOwnShares()*Constants.USAIncomeTax) / 100;
             }
         }
         Utils.Log("Total tax: "+totalTax+" $");
@@ -359,5 +361,24 @@ public class Logic {
         double percent = (totalSectorInvestment * 100) / getTotalInvested();
         Utils.Log("Investment percent in "+sector+" sector: "+Constants.currencyFormat.format(percent)+" %");
         return percent;
+    }
+
+    public double getShareTax(String shareSymbol){
+        double tax = 0;
+        Stock_blob stockBlob = getAddedStock(shareSymbol);
+        switch (shareSymbol){
+            case "TRIG.L", "BSIF.L" ->
+                    tax = ((stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Constants.GBIncomeTax) / 100)*getExchangeRateGBP();
+            case "MC.PA" ->
+                    tax = ((stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Constants.FRIncomeTax) / 100)*getExchangeRateEUR();
+            case "ENB" ->
+                    tax = ((stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Constants.USAIncomeTax) / 100)*getExchangeRateCAD();
+            case "TSM" ->
+                    tax = ((stockBlob.getDivPerQ())*stockBlob.getOwnShares()*Constants.TWIncomeTax) / 100;
+            default ->
+                    tax = ((stockBlob.getDivPerQ())*stockBlob.getOwnShares()*Constants.USAIncomeTax) / 100;
+        }
+        Utils.Log("Tax for "+shareSymbol+" : "+tax+" $");
+        return tax;
     }
 }
