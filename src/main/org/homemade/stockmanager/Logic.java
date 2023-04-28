@@ -394,9 +394,11 @@ public class Logic {
         return tax;
     }
 
-    public void getShareLatestNews(String shareSymbol){
+    public String getShareLatestNews(String shareSymbol){
         String query = shareSymbol;
         String urlString = "https://newsapi.org/v2/everything?q=" + query + "&apiKey=" + newsApiKey;
+
+        StringBuilder news= new StringBuilder();
 
         try {
             URL url = new URL(urlString);
@@ -415,13 +417,15 @@ public class Logic {
             JSONArray articles = jsonObject.getJSONArray("articles");
             for (int i = 0; i < articles.length(); i++) {
                 JSONObject article = articles.getJSONObject(i);
-                System.out.println(article.getString("title"));
-                System.out.println(article.getString("description"));
-                System.out.println(article.getString("url"));
-                System.out.println();
+                news.append(article.getString("title")).append("\n");
+                news.append(article.getString("description")).append("\n");
+                news.append(article.getString("url")).append("\n");
+                news.append("\n");
             }
         } catch (IOException | JSONException e) {
             System.out.println(e.getMessage());
         }
+
+        return news.toString();
     }
 }
