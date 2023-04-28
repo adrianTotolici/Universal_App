@@ -1,7 +1,10 @@
 package org.homemade.stockmanager;
 
+import org.apache.commons.io.FileUtils;
 import org.homemade.Utils;
 import org.homemade.stockmanager.blobs.Stock_blob;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import yahoofinance.Stock;
 import yahoofinance.YahooFinance;
@@ -12,8 +15,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 
 import java.io.FileInputStream;
@@ -33,6 +34,8 @@ public class Logic {
     private double exchangeRateGBP;
     private final boolean development = true;
     private static String stockFilePath;
+    private String newsApiKey;
+    private String exchangeRateApiKey;
 
     public void setStockFilePath(String filePath){
         stockFilePath = filePath;
@@ -56,11 +59,22 @@ public class Logic {
                 Files.createDirectories(stockFile.getParent());
                 Files.createFile(stockFile);
             }
+            getApiKeys();
             getExchangeRates();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
+    }
+
+    private void getApiKeys(){
+        try {
+            File apiKeyFile = new File(Constants.apiKey);
+            exchangeRateApiKey = FileUtils.readLines(apiKeyFile).get(0);
+            newsApiKey = FileUtils.readLines(apiKeyFile).get(1);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void getExchangeRates(){
@@ -182,11 +196,9 @@ public class Logic {
             if (currency.equals("USD")) return 1;
         }else {
             try {
-                // Your Open Exchange Rates app_id
-                String appId = "4207fe17e2564aebb5f1627b5928f877";
 
                 // URL for the Open Exchange Rates API
-                String url = "https://openexchangerates.org/api/latest.json?app_id=" + appId;
+                String url = "https://openexchangerates.org/api/latest.json?app_id=" + exchangeRateApiKey;
 
                 // Send the GET request to the API
                 HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
@@ -380,5 +392,36 @@ public class Logic {
         }
         Utils.Log("Tax for "+shareSymbol+" : "+tax+" $");
         return tax;
+    }
+
+    public void getShareLatestNews(String shareSymbol){
+        String query = shareSymbol;
+        String urlString = "https://newsapi.org/v2/everything?q=" + query + "&apiKey=" + newsApiKey;
+
+        try {
+            URL url = new URL(urlString);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuffer response = new StringBuffer();
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            JSONObject jsonObject = new JSONObject(response.toString());
+            JSONArray articles = jsonObject.getJSONArray("articles");
+            for (int i = 0; i < articles.length(); i++) {
+                JSONObject article = articles.getJSONObject(i);
+                System.out.println(article.getString("title"));
+                System.out.println(article.getString("description"));
+                System.out.println(article.getString("url"));
+                System.out.println();
+            }
+        } catch (IOException | JSONException e) {
+            System.out.println(e.getMessage());
+        }
     }
 }

@@ -448,6 +448,8 @@ public class GuiStockLogic extends Component {
         shareAnnouncementValue.setText(String.valueOf(stockBlob.getAnnoucementDate()));
         shareExDividendValue.setText(String.valueOf(stockBlob.getExDividendDate()));
         sharePayDayValue.setText(String.valueOf(stockBlob.getPayDate()));
+
+        Logic.getInstance().getShareLatestNews(stockBlob.getName());
     }
 
     public void populateEditPanel(@NotNull Stock_blob stockBlob){
@@ -535,6 +537,8 @@ public class GuiStockLogic extends Component {
         removeAllButton.setEnabled(true);
         removeButton.setEnabled(true);
     }
+
+
 
 }
 
