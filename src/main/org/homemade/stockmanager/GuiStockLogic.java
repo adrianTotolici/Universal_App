@@ -6,8 +6,6 @@ import org.homemade.stockmanager.blobs.Stock_blob;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
@@ -90,6 +88,8 @@ public class GuiStockLogic extends Component {
     private JLabel sharePayDayLabel;
     private JLabel sharePayDayValue;
     private JPanel shareDetailInformationPanel;
+    private JTextPane shareNewsPane;
+    private JScrollPane newsJScroll;
     private JFileChooser xmlImporter;
     private JFileChooser pathLocation;
     private JMenu menu;
@@ -448,6 +448,10 @@ public class GuiStockLogic extends Component {
         shareAnnouncementValue.setText(String.valueOf(stockBlob.getAnnoucementDate()));
         shareExDividendValue.setText(String.valueOf(stockBlob.getExDividendDate()));
         sharePayDayValue.setText(String.valueOf(stockBlob.getPayDate()));
+
+        shareNewsPane.setText(Logic.getInstance().getShareLatestNews(stockBlob.getName()));
+        shareNewsPane.setSelectionStart(0);
+        shareNewsPane.setSelectionEnd(0);
     }
 
     public void populateEditPanel(@NotNull Stock_blob stockBlob){
@@ -535,6 +539,8 @@ public class GuiStockLogic extends Component {
         removeAllButton.setEnabled(true);
         removeButton.setEnabled(true);
     }
+
+
 
 }
 
