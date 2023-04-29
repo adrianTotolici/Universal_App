@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Objects;
 
 import static org.homemade.stockmanager.Constants.USAIncomeTax;
 
@@ -321,5 +322,14 @@ public class LogicTest {
         Logic.getInstance().updateStock(stockBlob);
 
         Assertions.assertEquals(Logic.getInstance().getShareTax(TEST_STOCK), 1);
+    }
+
+    @Test
+    public void getShareLatestNews(){
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().getStock(TEST_STOCK);
+        Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
+        Assertions.assertNotEquals("", Logic.getInstance().getShareLatestNews(stockBlob.getName()));
+        Assertions.assertEquals(Logic.getInstance().getShareLatestNews(""), DefaultLang.noNewsInfo);
     }
 }

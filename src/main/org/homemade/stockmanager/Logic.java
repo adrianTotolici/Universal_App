@@ -395,8 +395,7 @@ public class Logic {
     }
 
     public String getShareLatestNews(String shareSymbol){
-        String query = shareSymbol;
-        String urlString = "https://newsapi.org/v2/everything?q=" + query + "&apiKey=" + newsApiKey;
+        String urlString = "https://newsapi.org/v2/everything?q=" + shareSymbol + "&apiKey=" + newsApiKey;
 
         StringBuilder news= new StringBuilder();
 
@@ -407,7 +406,7 @@ public class Logic {
 
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             String inputLine;
-            StringBuffer response = new StringBuffer();
+            StringBuilder response = new StringBuilder();
             while ((inputLine = in.readLine()) != null) {
                 response.append(inputLine);
             }
@@ -417,15 +416,16 @@ public class Logic {
             JSONArray articles = jsonObject.getJSONArray("articles");
             for (int i = 0; i < articles.length(); i++) {
                 JSONObject article = articles.getJSONObject(i);
-                news.append(article.getString("title")).append("\n");
-                news.append(article.getString("description")).append("\n");
+                news.append(article.getString("title")).append("\n\n");
+                news.append(article.getString("description")).append("\n\n");
                 news.append(article.getString("url")).append("\n");
+                news.append("-------------\n");
                 news.append("\n");
             }
         } catch (IOException | JSONException e) {
             System.out.println(e.getMessage());
+            news.append(DefaultLang.noNewsInfo).append(shareSymbol);
         }
-
         return news.toString();
     }
 }

@@ -44,4 +44,5 @@ public class DefaultLang extends org.homemade.DefaultLang {
     public static String shareAnnouncementLabel = "Announcement day";
     public static String shareExDividendLabel = "Ex-Dividend day";
     public static String sharePayDayLabel = "Pay day";
+    public static String noNewsInfo = "No news provided for ";
 }
