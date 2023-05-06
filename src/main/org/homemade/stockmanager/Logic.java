@@ -1,7 +1,9 @@
 package org.homemade.stockmanager;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.poi.ss.usermodel.Cell;
 import org.homemade.Utils;
+import org.homemade.stockmanager.blobs.Investment_blob;
 import org.homemade.stockmanager.blobs.Stock_blob;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,6 +21,7 @@ import java.util.HashMap;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Objects;
 
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -28,6 +31,7 @@ public class Logic {
 
     private static Logic instance;
     private HashMap<String, Object> stockList = new HashMap<>();
+    private HashMap<String, Object> investmentList = new HashMap<>();
     private double exchangeRateRON;
     private double exchangeRateEUR;
     private double exchangeRateCAD;
@@ -121,7 +125,8 @@ public class Logic {
         } catch (RuntimeException e){
             Utils.Log(e.getMessage());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            Utils.Log(e.getMessage());
+            Utils.Log("Yahoo server connection failed !!!!");
         }
     }
 
@@ -230,51 +235,16 @@ public class Logic {
     }
 
     public void readXLSX(String xlsxPath) {
-        int dividendIndexSheet = 4;
-        int shareNameColumnIndex = 1;
-        int shareIndustryColumnIndex = 13;
-        int divPerQColumnIndex = 3;
-        int ownSharesColumnIndex = 8;
-        int investmentColumnIndex = 7;
-        int sectorColumnIndex = 12;
-
-        HashMap<String, String> shareSymbolReplacement = Constants.shareSymbolReplacement;
 
         try {
             FileInputStream fileInputStream = new FileInputStream(xlsxPath);
             XSSFWorkbook  workBook = new XSSFWorkbook (fileInputStream);
-            XSSFSheet dividendAll = workBook.getSheetAt(dividendIndexSheet);
-            for (Row row : dividendAll) {
-                int rowNum = row.getRowNum();
-                if (rowNum>=2){
-                    String shareSymbol = row.getCell(shareNameColumnIndex).getStringCellValue();
-                    for (String origSymbol : shareSymbolReplacement.keySet()) {
-                        if (shareSymbol.equals(origSymbol)){
-                            shareSymbol = shareSymbolReplacement.get(origSymbol);
-                        }
-                    }
-                    getStock(shareSymbol);
-                    String shareIndustry = row.getCell(shareIndustryColumnIndex).getStringCellValue();
-                    double shareDivPerQ = (row.getCell(divPerQColumnIndex).getNumericCellValue())/100;
-                    double ownShareNum = row.getCell(ownSharesColumnIndex).getNumericCellValue();
-                    double investment = row.getCell(investmentColumnIndex).getNumericCellValue();
-                    String sector = row.getCell(sectorColumnIndex).getStringCellValue();
+            XSSFSheet dividendAll = workBook.getSheet(Constants.xmlDividendXMLSheetName);
+            XSSFSheet qInvestmentDetail = workBook.getSheet(Constants.xmlQInvestmentDetail);
 
-                    Stock_blob stockBlob = getAddedStock(shareSymbol);
-                    stockBlob.setIndustry(shareIndustry);
-                    stockBlob.setDivPerQ(shareDivPerQ);
-                    stockBlob.setOwnShares(ownShareNum);
-                    stockBlob.setInvestment(investment);
-                    stockBlob.setSector(sector);
-                    switch (shareSymbol){
-                        case "TRIG.L", "BSIF.L" -> {
-                            stockBlob.setValue(BigDecimal.valueOf(stockBlob.getValue()/100));
-                        }
-                    }
+            readXLSAllShares(dividendAll);
+            readXLSInvestment(qInvestmentDetail);
 
-                    updateStock(stockBlob);
-                }
-            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -427,5 +397,115 @@ public class Logic {
             news.append(DefaultLang.noNewsInfo).append(shareSymbol);
         }
         return news.toString();
+    }
+
+    public Investment_blob getAddedInvestment(String symbol){
+        if (investmentList.containsKey(symbol)){
+            return (Investment_blob) investmentList.get(symbol);
+        }else {
+            return null;
+        }
+    }
+
+    private void readXLSAllShares(XSSFSheet dividendAll){
+        int shareNameColumnIndex = 1;
+        int div_shareIndustryColumnIndex = 13;
+        int div_divPerQColumnIndex = 3;
+        int div_ownSharesColumnIndex = 8;
+        int div_investmentColumnIndex = 7;
+        int div_sectorColumnIndex = 12;
+
+        HashMap<String, String> shareSymbolReplacement = Constants.shareSymbolReplacement;
+
+        for (Row row : dividendAll) {
+            int rowNum = row.getRowNum();
+            if (rowNum >= 2) {
+                String shareSymbol = row.getCell(shareNameColumnIndex).getStringCellValue();
+                for (String origSymbol : shareSymbolReplacement.keySet()) {
+                    if (shareSymbol.equals(origSymbol)) {
+                        shareSymbol = shareSymbolReplacement.get(origSymbol);
+                    }
+                }
+                getStock(shareSymbol);
+                String shareIndustry = row.getCell(div_shareIndustryColumnIndex).getStringCellValue();
+                double shareDivPerQ = (row.getCell(div_divPerQColumnIndex).getNumericCellValue()) / 100;
+                double ownShareNum = row.getCell(div_ownSharesColumnIndex).getNumericCellValue();
+                double investment = row.getCell(div_investmentColumnIndex).getNumericCellValue();
+                String sector = row.getCell(div_sectorColumnIndex).getStringCellValue();
+
+                Stock_blob stockBlob = getAddedStock(shareSymbol);
+                stockBlob.setIndustry(shareIndustry);
+                stockBlob.setDivPerQ(shareDivPerQ);
+                stockBlob.setOwnShares(ownShareNum);
+                stockBlob.setInvestment(investment);
+                stockBlob.setSector(sector);
+                switch (shareSymbol) {
+                    case "TRIG.L", "BSIF.L" -> {
+                        stockBlob.setValue(BigDecimal.valueOf(stockBlob.getValue() / 100));
+                    }
+                }
+
+                updateStock(stockBlob);
+            }
+        }
+    }
+
+    private void readXLSInvestment(XSSFSheet qInvestmentDetail){
+        int filedColumns = 1;
+        HashMap<String, String> shareSymbolReplacement = Constants.shareSymbolReplacement;
+
+        Row row_header = qInvestmentDetail.getRow(1);
+        for (int i = 1; i < row_header.getLastCellNum(); i++) {
+            Cell cell = row_header.getCell(i);
+            if (!cell.getStringCellValue().equals("")){
+                filedColumns +=1;
+            }
+        }
+
+        for (Row row : qInvestmentDetail) {
+            int rowNum = row.getRowNum();
+            if (rowNum>=2) {
+                String shareSymbol = row.getCell(0).getStringCellValue();
+                for (String origSymbol : shareSymbolReplacement.keySet()) {
+                    if (shareSymbol.equals(origSymbol)){
+                        shareSymbol = shareSymbolReplacement.get(origSymbol);
+                    }
+                }
+
+                Investment_blob investmentBlob = getAddedInvestment(shareSymbol);
+                if (investmentBlob == null){
+                    investmentBlob = new Investment_blob();
+                    investmentBlob.setStockSymbol(shareSymbol);
+                }
+
+                short prompter_exchange = 4;
+                short prompter_investment = 5;
+                short prompter_price = 6;
+                short i=0;
+
+                double exchange;
+                double price;
+                double investment;
+
+                while (prompter_price<=filedColumns){
+                    exchange = row.getCell(prompter_exchange).getNumericCellValue();
+                    price = row.getCell(prompter_price).getNumericCellValue();
+                    investment = row.getCell(prompter_investment).getNumericCellValue();
+                    investmentBlob.setInvestment(investment,exchange,price);
+
+                    if (i<=3){
+                        prompter_price+=3;
+                        prompter_exchange+=3;
+                        prompter_investment+=3;
+                        i+=1;
+                    }else {
+                        prompter_price+=4;
+                        prompter_investment+=4;
+                        prompter_exchange+=4;
+                        i=0;
+                    }
+                }
+            }
+        }
     }
 }

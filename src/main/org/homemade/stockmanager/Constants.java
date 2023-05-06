@@ -74,4 +74,7 @@ public class Constants extends org.homemade.Constants {
     public static void setStockFilePath(String newPath){
         stockFilePath = newPath+"\\stock_file";
     }
+
+    public static final String xmlDividendXMLSheetName = "Divident_all";
+    public static final String xmlQInvestmentDetail = "Q_invest_detail";
 }

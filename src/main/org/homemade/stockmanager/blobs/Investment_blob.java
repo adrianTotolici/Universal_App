@@ -2,8 +2,7 @@ package org.homemade.stockmanager.blobs;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
 public class Investment_blob implements Serializable {
 
@@ -11,7 +10,7 @@ public class Investment_blob implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private String stockSymbol;
-    private List<Double> investment = new ArrayList<>();
+    private HashMap<Double, HashMap<Double, Double>> investment = new HashMap<>();
 
     public String getStockSymbol() {
         return stockSymbol;
@@ -21,12 +20,13 @@ public class Investment_blob implements Serializable {
         this.stockSymbol = stockSymbol;
     }
 
-    public List<Double> getInvestment() {
+    public HashMap<Double, HashMap<Double, Double>> getInvestment() {
         return investment;
     }
 
-    public void addInvestment(Double investment) {
-        this.investment.add(investment);
+    public void setInvestment(double investment, double exchangeRate, double sharePrice) {
+        HashMap<Double, Double> hashMap = new HashMap<>();
+        hashMap.put(exchangeRate, sharePrice);
+        this.investment.put(investment,hashMap);
     }
-
 }
