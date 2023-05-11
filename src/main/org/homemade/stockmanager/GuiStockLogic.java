@@ -90,6 +90,8 @@ public class GuiStockLogic extends Component {
     private JPanel shareDetailInformationPanel;
     private JTextPane shareNewsPane;
     private JScrollPane newsJScroll;
+    private JLabel recomendedInvestmentLabel;
+    private JLabel recomendedInvestmentValue;
     private JFileChooser xmlImporter;
     private JFileChooser pathLocation;
     private JMenu menu;
@@ -161,6 +163,7 @@ public class GuiStockLogic extends Component {
 
     private void updateStockTable(boolean importData){
         HashMap<String, Stock_blob> stockBlobs = Logic.getInstance().loadStockData(Constants.stockFilePath);
+        Logic.getInstance().loadInvestmentData(Constants.investmentFilePath);
         DefaultTableModel model = (DefaultTableModel) stockTable.getModel();
         model.setRowCount(0);
         Object[] row = new Object[Constants.columnNamesStockTable.length];
@@ -249,7 +252,7 @@ public class GuiStockLogic extends Component {
     }
 
     public void init(){
-        Logic.getInstance().setStockFilePath(Constants.stockFilePath);
+        Logic.getInstance().setStockFilePath(Constants.stockFilePath, Constants.investmentFilePath);
         showStockPanel();
         initMenuBar();
         showStockTable();
@@ -438,6 +441,7 @@ public class GuiStockLogic extends Component {
         shareAnnouncementLabel.setText(DefaultLang.shareAnnouncementLabel);
         shareExDividendLabel.setText(DefaultLang.shareExDividendLabel);
         sharePayDayLabel.setText(DefaultLang.sharePayDayLabel);
+        recomendedInvestmentLabel.setText(DefaultLang.recommendedInvestment);
 
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(shareSelected);
 
@@ -448,6 +452,7 @@ public class GuiStockLogic extends Component {
         shareAnnouncementValue.setText(String.valueOf(stockBlob.getAnnoucementDate()));
         shareExDividendValue.setText(String.valueOf(stockBlob.getExDividendDate()));
         sharePayDayValue.setText(String.valueOf(stockBlob.getPayDate()));
+        recomendedInvestmentValue.setText(Constants.currencyFormat.format(Logic.getInstance().computeNecessaryInvestment(shareSelected))+" RON");
 
         shareNewsPane.setText(Logic.getInstance().getShareLatestNews(stockBlob.getName()));
         shareNewsPane.setSelectionStart(0);

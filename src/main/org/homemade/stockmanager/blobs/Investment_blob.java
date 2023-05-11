@@ -11,6 +11,7 @@ public class Investment_blob implements Serializable {
 
     private String stockSymbol;
     private HashMap<Double, HashMap<Double, Double>> investment = new HashMap<>();
+    private double totalInvestment=0;
 
     public String getStockSymbol() {
         return stockSymbol;
@@ -28,5 +29,10 @@ public class Investment_blob implements Serializable {
         HashMap<Double, Double> hashMap = new HashMap<>();
         hashMap.put(exchangeRate, sharePrice);
         this.investment.put(investment,hashMap);
+        this.totalInvestment += investment;
+    }
+
+    public double getTotalInvestment() {
+        return totalInvestment;
     }
 }

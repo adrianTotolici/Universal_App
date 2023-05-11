@@ -29,6 +29,7 @@ public class LogicTest {
     public static String TEST_STOCK_FILE_DIVIDEND_PATH = "src/test/resources/Dividende_test.xlsx";
 
     public static String TEST_SAVE_STOCK_FILE = "src/test/resources/test_stock_file_path";
+    public static String TEST_SAVE_INVESTMENT_FILE = "src/test/resources/test_investment_file_path";
     public static String TEST_NEW_DIRECTORY_LOCATION = "src/test/resources/new_location";
 
     @Test
@@ -61,7 +62,7 @@ public class LogicTest {
 
     @Test
     public void getStock() {
-        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
         Logic.getInstance().getStock(TEST_STOCK);
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         Assertions.assertEquals(TEST_STOCK, stockBlob.getSymbol().toUpperCase());
@@ -70,7 +71,7 @@ public class LogicTest {
 
     @Test
     public void loadStockData() {
-        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
         Logic.getInstance().getStock(TEST_STOCK);
         HashMap<String, Stock_blob> stockBlob = Logic.getInstance().loadStockData(TEST_STOCK_FILE_PATH);
         Assertions.assertNotNull(stockBlob.get(TEST_STOCK));
@@ -79,7 +80,7 @@ public class LogicTest {
 
     @Test
     public void getAddedStock() {
-        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
         Logic.getInstance().getStock(TEST_STOCK);
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         Assertions.assertEquals(TEST_STOCK, stockBlob.getSymbol());
@@ -91,7 +92,7 @@ public class LogicTest {
 
     @Test
     public void updateStock() {
-        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
         Logic.getInstance().getStock(TEST_STOCK);
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         stockBlob.setIndustry(TEST_INDUSTRY_VALUE);
@@ -106,7 +107,7 @@ public class LogicTest {
 
     @Test
     public void removeStock() {
-        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
         Logic.getInstance().getAddedStock(TEST_STOCK);
         Logic.getInstance().removeStock(TEST_STOCK);
 
@@ -123,7 +124,7 @@ public class LogicTest {
 
     @Test
     public void readXLSX() {
-        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
         Logic.getInstance().readXLSX(TEST_STOCK_FILE_DIVIDEND_PATH);
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         Assertions.assertEquals(stockBlob.getSymbol(), TEST_STOCK);
@@ -133,7 +134,7 @@ public class LogicTest {
 
     @Test
     public void removeAllStock() {
-        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
         Logic.getInstance().getStock(TEST_STOCK);
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         Assertions.assertEquals(TEST_STOCK, stockBlob.getSymbol().toUpperCase());
@@ -159,7 +160,7 @@ public class LogicTest {
         Path path = Paths.get(TEST_NEW_DIRECTORY_LOCATION);
         Assertions.assertTrue(Files.exists(path));
 
-        Logic.getInstance().setStockFilePath(TEST_NEW_DIRECTORY_LOCATION + "/stock_file");
+        Logic.getInstance().setStockFilePath(TEST_NEW_DIRECTORY_LOCATION + "/stock_file", TEST_SAVE_INVESTMENT_FILE);
         Logic.getInstance().getStock(TEST_STOCK);
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         Assertions.assertEquals(TEST_STOCK, stockBlob.getSymbol());
@@ -188,7 +189,7 @@ public class LogicTest {
 
     @Test
     public void getTotalInvested() {
-        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
         Logic.getInstance().getStock(TEST_STOCK);
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         stockBlob.setInvestment(TEST_INVESTMENT_VALUE);
@@ -206,7 +207,7 @@ public class LogicTest {
 
     @Test
     public void getTotalProfit() {
-        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
 
         Logic.getInstance().getStock(TEST_STOCK);
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
@@ -241,7 +242,7 @@ public class LogicTest {
 
     @Test
     public void getTotalTax() {
-        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
 
         Logic.getInstance().getStock(TEST_STOCK);
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
@@ -284,7 +285,7 @@ public class LogicTest {
 
     @Test
     public void getInvestmentPercent() {
-        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
 
         Logic.getInstance().getStock(TEST_STOCK);
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
@@ -313,7 +314,7 @@ public class LogicTest {
 
     @Test
     public void getShareTax(){
-        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
         Logic.getInstance().getStock(TEST_STOCK);
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         stockBlob.setDivPerQ(10);
@@ -325,7 +326,7 @@ public class LogicTest {
 
     @Test
     public void getShareLatestNews(){
-        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE);
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
         Logic.getInstance().getStock(TEST_STOCK);
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(TEST_STOCK);
         Assertions.assertNotEquals("", Logic.getInstance().getShareLatestNews(stockBlob.getName()));

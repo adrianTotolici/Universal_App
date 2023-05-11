@@ -22,6 +22,7 @@ public class Constants extends org.homemade.Constants {
     public static final double GBP = 0.8049;
 
     public static String stockFilePath = "G:\\My Drive\\Universal App\\stock_file";
+    public static String investmentFilePath = "G:\\My Drive\\Universal App\\investment_file";
     public static String apiKey="G:\\My Drive\\Universal App\\api_key.txt";
 
     public static final String[] columnNamesStockTable = {"Symbol", "Name", "Price", "Dividend / Quarter", "Own Shares",
