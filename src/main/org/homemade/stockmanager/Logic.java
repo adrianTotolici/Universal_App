@@ -1,5 +1,7 @@
 package org.homemade.stockmanager;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.apache.commons.io.FileUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.homemade.Utils;
@@ -14,6 +16,8 @@ import yahoofinance.YahooFinance;
 import java.io.*;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +25,7 @@ import java.util.HashMap;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -40,6 +45,7 @@ public class Logic {
     private static String investmentFilePath;
     private String newsApiKey;
     private String exchangeRateApiKey;
+    private String alphaVantageApiKey;
 
     public void setStockFilePath(String stockFilePath, String investmentFilePath) {
         Logic.stockFilePath = stockFilePath;
@@ -77,6 +83,7 @@ public class Logic {
             File apiKeyFile = new File(Constants.apiKey);
             exchangeRateApiKey = FileUtils.readLines(apiKeyFile).get(0);
             newsApiKey = FileUtils.readLines(apiKeyFile).get(1);
+            alphaVantageApiKey = FileUtils.readLines(apiKeyFile).get(2);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -109,7 +116,7 @@ public class Logic {
         return exchangeRateGBP;
     }
 
-    public void getStock(String name) {
+    public void getStock_yahoo(String name) {
         try {
             Stock stock = YahooFinance.get(name);
             Stock_blob stockBlob = new Stock_blob();
@@ -128,6 +135,58 @@ public class Logic {
         } catch (IOException e) {
             Utils.Log(e.getMessage());
             Utils.Log("Yahoo server connection failed !!!!");
+        }
+    }
+
+    public void getStock(String name){
+        String apiKey = alphaVantageApiKey;
+        String symbol = name;
+        String apiUrl = "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + symbol + "&apikey=" + apiKey;
+
+        try {
+            URL url = new URL(apiUrl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String line;
+                StringBuilder response = new StringBuilder();
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+                conn.disconnect();
+
+                Gson gson = new Gson();
+                JsonObject jsonResponse = gson.fromJson(response.toString(), JsonObject.class);
+                JsonObject globalQuote = jsonResponse.getAsJsonObject("Global Quote");
+
+                // Process the response
+                Stock_blob stockBlob = new Stock_blob();
+                stockBlob.setSymbol(globalQuote.get("01. symbol").getAsString());
+                stockBlob.setValue(BigDecimal.valueOf(globalQuote.get("05. price").getAsDouble()));
+
+                Utils.Log("Adding stock "+stockBlob.getSymbol());
+
+                if (!stockList.containsKey(stockBlob.getSymbol().toUpperCase())) {
+                    stockList.put(stockBlob.getSymbol(), stockBlob);
+                    saveStock();
+                }
+
+                loadStockData(stockFilePath);
+
+            } else {
+                // Handle the error case
+                System.out.println("Error: " + responseCode);
+            }
+        } catch (ProtocolException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -429,6 +488,7 @@ public class Logic {
         int div_ownSharesColumnIndex = 8;
         int div_investmentColumnIndex = 7;
         int div_sectorColumnIndex = 12;
+        int appiCalls = 0;
 
         HashMap<String, String> shareSymbolReplacement = Constants.shareSymbolReplacement;
 
@@ -441,7 +501,19 @@ public class Logic {
                         shareSymbol = shareSymbolReplacement.get(origSymbol);
                     }
                 }
-                getStock(shareSymbol);
+                if (appiCalls < 5) {
+                    getStock(shareSymbol);
+                    appiCalls +=1;
+                }else{
+                    try {
+                        Utils.Log("Waiting 1 min because you are using a free api finance !!!");
+                        TimeUnit.MINUTES.sleep(1);
+                        getStock(shareSymbol);
+                        appiCalls = 1;
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
                 String shareIndustry = row.getCell(div_shareIndustryColumnIndex).getStringCellValue();
                 double shareDivPerQ = (row.getCell(div_divPerQColumnIndex).getNumericCellValue()) / 100;
                 double ownShareNum = row.getCell(div_ownSharesColumnIndex).getNumericCellValue();

@@ -332,4 +332,13 @@ public class LogicTest {
         Assertions.assertNotEquals("", Logic.getInstance().getShareLatestNews(stockBlob.getName()));
         Assertions.assertEquals(Logic.getInstance().getShareLatestNews(""), DefaultLang.noNewsInfo);
     }
+
+    @Test
+    public void loadInvestmentData() {
+        Logic.getInstance().setStockFilePath(TEST_SAVE_STOCK_FILE, TEST_SAVE_INVESTMENT_FILE);
+        Logic.getInstance().getStock(TEST_STOCK);
+        HashMap<String, Stock_blob> stockBlob = Logic.getInstance().loadStockData(TEST_STOCK_FILE_PATH);
+        Assertions.assertNotNull(stockBlob.get(TEST_STOCK));
+        Logic.getInstance().removeAllStock();
+    }
 }
