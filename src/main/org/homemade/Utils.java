@@ -10,7 +10,7 @@ public class Utils {
         System.out.println("("+callerClassName+") "+obj.toString());
     }
 
-    public static void saveData(HashMap<String, Object> object, String filePath){
+    public static void saveData(Object object, String filePath){
         try {
             File file = new File(filePath);
             FileOutputStream oFile = new FileOutputStream(file, false);

@@ -24,6 +24,7 @@ public class Constants extends org.homemade.Constants {
     public static String stockFilePath = "G:\\My Drive\\Universal App\\stock_file";
     public static String investmentFilePath = "G:\\My Drive\\Universal App\\investment_file";
     public static String apiKey="G:\\My Drive\\Universal App\\api_key.txt";
+    public static String apiCallsDay = "G:\\My Drive\\Universal App\\api_call_day";
 
     public static final String[] columnNamesStockTable = {"Symbol", "Name", "Price", "Dividend / Quarter", "Own Shares",
             "Investment", "Profit / Quarter", "Tax", "Profit / Quarter RON"};

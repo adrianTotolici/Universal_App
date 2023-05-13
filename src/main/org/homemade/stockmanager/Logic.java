@@ -46,6 +46,8 @@ public class Logic {
     private String newsApiKey;
     private String exchangeRateApiKey;
     private String alphaVantageApiKey;
+    private int apiCalls = 0;
+    private int apiCallsDay = 500;
 
     public void setStockFilePath(String stockFilePath, String investmentFilePath) {
         Logic.stockFilePath = stockFilePath;
@@ -72,6 +74,7 @@ public class Logic {
             }
             getApiKeys();
             getExchangeRates();
+            loadApiCals();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -142,6 +145,7 @@ public class Logic {
         String apiKey = alphaVantageApiKey;
         String symbol = name;
         String apiUrl = "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + symbol + "&apikey=" + apiKey;
+        checkApiCalls();
 
         try {
             URL url = new URL(apiUrl);
@@ -481,6 +485,27 @@ public class Logic {
         }
     }
 
+    public void checkApiCalls() {
+        if (apiCallsDay > 0) {
+            if (apiCalls < 5) {
+                apiCalls += 1;
+                apiCallsDay -= 1;
+            } else {
+                try {
+                    Utils.Log("Waiting 1 min because you are using a free api finance !!!");
+                    TimeUnit.MINUTES.sleep(1);
+                    apiCalls = 1;
+                    apiCallsDay -= 1;
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            saveApiCalls();
+        }else {
+            Utils.Log("You are using a free api finance !!! Maxim api calls per day have been reached");
+        }
+    }
+
     private void readXLSAllShares(XSSFSheet dividendAll) {
         int shareNameColumnIndex = 1;
         int div_shareIndustryColumnIndex = 13;
@@ -488,7 +513,7 @@ public class Logic {
         int div_ownSharesColumnIndex = 8;
         int div_investmentColumnIndex = 7;
         int div_sectorColumnIndex = 12;
-        int appiCalls = 0;
+
 
         HashMap<String, String> shareSymbolReplacement = Constants.shareSymbolReplacement;
 
@@ -501,19 +526,7 @@ public class Logic {
                         shareSymbol = shareSymbolReplacement.get(origSymbol);
                     }
                 }
-                if (appiCalls < 5) {
-                    getStock(shareSymbol);
-                    appiCalls +=1;
-                }else{
-                    try {
-                        Utils.Log("Waiting 1 min because you are using a free api finance !!!");
-                        TimeUnit.MINUTES.sleep(1);
-                        getStock(shareSymbol);
-                        appiCalls = 1;
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
+                getStock(shareSymbol);
                 String shareIndustry = row.getCell(div_shareIndustryColumnIndex).getStringCellValue();
                 double shareDivPerQ = (row.getCell(div_divPerQColumnIndex).getNumericCellValue()) / 100;
                 double ownShareNum = row.getCell(div_ownSharesColumnIndex).getNumericCellValue();
@@ -635,5 +648,18 @@ public class Logic {
         }
         necessaryInvestment = mediumInvestment * iter * getExchangeRateRON();
         return necessaryInvestment;
+    }
+
+    private void saveApiCalls(){
+        Utils.saveData(apiCallsDay, Constants.apiCallsDay.toString());
+    }
+
+    private void loadApiCals(){
+        try {
+            File apiKeyFile = new File(Constants.apiCallsDay);
+            apiCallsDay = Integer.parseInt(FileUtils.readLines(apiKeyFile).get(0));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
