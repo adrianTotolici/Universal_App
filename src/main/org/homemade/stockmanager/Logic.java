@@ -47,7 +47,7 @@ public class Logic {
     private String exchangeRateApiKey;
     private String alphaVantageApiKey;
     private int apiCalls = 0;
-    private int apiCallsDay = 500;
+    private int apiCallsDay;
 
     public void setStockFilePath(String stockFilePath, String investmentFilePath) {
         Logic.stockFilePath = stockFilePath;
@@ -249,7 +249,9 @@ public class Logic {
     public void removeStock(String symbol) {
         if (stockList.containsKey(symbol)) {
             stockList.remove(symbol);
+            investmentList.remove(symbol);
             saveStock();
+            saveInvestment();
         }
     }
 
@@ -339,6 +341,8 @@ public class Logic {
     public void removeAllStock() {
         stockList.clear();
         saveStock();
+        investmentList.clear();
+        saveInvestment();
     }
 
     public void saveStock() {
@@ -485,7 +489,7 @@ public class Logic {
         }
     }
 
-    public void checkApiCalls() {
+    private void checkApiCalls() {
         if (apiCallsDay > 0) {
             if (apiCalls < 5) {
                 apiCalls += 1;
@@ -613,7 +617,7 @@ public class Logic {
     }
 
     public double computeNecessaryInvestment(String shareSymbol) {
-        double necessaryInvestment = 0;
+        double necessaryInvestment;
         Investment_blob addedInvestment = getAddedInvestment(shareSymbol);
         HashMap<Double, HashMap<Double, Double>> investment_struct = addedInvestment.getInvestment();
 
@@ -651,15 +655,34 @@ public class Logic {
     }
 
     private void saveApiCalls(){
-        Utils.saveData(apiCallsDay, Constants.apiCallsDay.toString());
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(Constants.apiCallsDay);
+            DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
+
+            dataOutputStream.writeInt(apiCallsDay);
+
+            dataOutputStream.close();
+            fileOutputStream.close();
+            Utils.Log("Save finance api calls with value: "+apiCallsDay);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private void loadApiCals(){
+    private void loadApiCals() {
         try {
-            File apiKeyFile = new File(Constants.apiCallsDay);
-            apiCallsDay = Integer.parseInt(FileUtils.readLines(apiKeyFile).get(0));
+            FileInputStream fileInputStream = new FileInputStream(Constants.apiCallsDay);
+            DataInputStream dataInputStream = new DataInputStream(fileInputStream);
+
+            int readNumber = dataInputStream.readInt();
+
+            dataInputStream.close();
+            fileInputStream.close();
+
+            apiCallsDay = readNumber;
+            Utils.Log("Load finance api calls with value: "+apiCallsDay);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
     }
 }

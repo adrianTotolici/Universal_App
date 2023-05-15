@@ -24,4 +24,18 @@ public class Utils {
 
     }
 
+    public static void writeData(Integer integer, String filePath){
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(filePath);
+            DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
+
+            dataOutputStream.writeInt(integer);
+
+            dataOutputStream.close();
+            fileOutputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
