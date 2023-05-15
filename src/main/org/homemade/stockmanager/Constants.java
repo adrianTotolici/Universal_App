@@ -22,7 +22,9 @@ public class Constants extends org.homemade.Constants {
     public static final double GBP = 0.8049;
 
     public static String stockFilePath = "G:\\My Drive\\Universal App\\stock_file";
+    public static String investmentFilePath = "G:\\My Drive\\Universal App\\investment_file";
     public static String apiKey="G:\\My Drive\\Universal App\\api_key.txt";
+    public static String apiCallsDay = "G:\\My Drive\\Universal App\\api_call_day";
 
     public static final String[] columnNamesStockTable = {"Symbol", "Name", "Price", "Dividend / Quarter", "Own Shares",
             "Investment", "Profit / Quarter", "Tax", "Profit / Quarter RON"};
@@ -74,4 +76,7 @@ public class Constants extends org.homemade.Constants {
     public static void setStockFilePath(String newPath){
         stockFilePath = newPath+"\\stock_file";
     }
+
+    public static final String xmlDividendXMLSheetName = "Divident_all";
+    public static final String xmlQInvestmentDetail = "Q_invest_detail";
 }

@@ -1,7 +1,11 @@
 package org.homemade.stockmanager;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.apache.commons.io.FileUtils;
+import org.apache.poi.ss.usermodel.Cell;
 import org.homemade.Utils;
+import org.homemade.stockmanager.blobs.Investment_blob;
 import org.homemade.stockmanager.blobs.Stock_blob;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,6 +16,8 @@ import yahoofinance.YahooFinance;
 import java.io.*;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,6 +25,7 @@ import java.util.HashMap;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -28,56 +35,64 @@ public class Logic {
 
     private static Logic instance;
     private HashMap<String, Object> stockList = new HashMap<>();
+    private HashMap<String, Object> investmentList = new HashMap<>();
     private double exchangeRateRON;
     private double exchangeRateEUR;
     private double exchangeRateCAD;
     private double exchangeRateGBP;
     private final boolean development = true;
     private static String stockFilePath;
+    private static String investmentFilePath;
     private String newsApiKey;
     private String exchangeRateApiKey;
+    private String alphaVantageApiKey;
+    private int apiCalls = 0;
+    private int apiCallsDay;
 
-    public void setStockFilePath(String filePath){
-        stockFilePath = filePath;
+    public void setStockFilePath(String stockFilePath, String investmentFilePath) {
+        Logic.stockFilePath = stockFilePath;
+        Logic.investmentFilePath = investmentFilePath;
     }
 
-    public static Logic getInstance(){
-        if (instance == null){
+    public static Logic getInstance() {
+        if (instance == null) {
             instance = new Logic();
         }
         return instance;
     }
 
-    private Logic(){
+    private Logic() {
         init();
     }
 
-    private void init(){
+    private void init() {
         try {
             Path stockFile = Path.of(Constants.stockFilePath);
-            if  ( ! Files.exists(stockFile)) {
+            if (!Files.exists(stockFile)) {
                 Files.createDirectories(stockFile.getParent());
                 Files.createFile(stockFile);
             }
             getApiKeys();
             getExchangeRates();
+            loadApiCals();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
     }
 
-    private void getApiKeys(){
+    private void getApiKeys() {
         try {
             File apiKeyFile = new File(Constants.apiKey);
             exchangeRateApiKey = FileUtils.readLines(apiKeyFile).get(0);
             newsApiKey = FileUtils.readLines(apiKeyFile).get(1);
+            alphaVantageApiKey = FileUtils.readLines(apiKeyFile).get(2);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void getExchangeRates(){
+    public void getExchangeRates() {
         exchangeRateRON = getExchangeRate(Constants.Ron);
         Utils.Log("Exchange rate for RON: " + exchangeRateRON);
         exchangeRateCAD = getExchangeRate(Constants.CanadianDollar);
@@ -104,7 +119,7 @@ public class Logic {
         return exchangeRateGBP;
     }
 
-    public void getStock(String name){
+    public void getStock_yahoo(String name) {
         try {
             Stock stock = YahooFinance.get(name);
             Stock_blob stockBlob = new Stock_blob();
@@ -112,20 +127,74 @@ public class Logic {
             stockBlob.setSymbol(stock.getSymbol());
             stockBlob.setValue(stock.getQuote(true).getPrice());
 
-            if (! stockList.containsKey(stockBlob.getSymbol().toUpperCase())) {
+            if (!stockList.containsKey(stockBlob.getSymbol().toUpperCase())) {
                 stockList.put(stockBlob.getSymbol(), stockBlob);
                 saveStock();
             }
 
             loadStockData(stockFilePath);
-        } catch (RuntimeException e){
+        } catch (RuntimeException e) {
             Utils.Log(e.getMessage());
+        } catch (IOException e) {
+            Utils.Log(e.getMessage());
+            Utils.Log("Yahoo server connection failed !!!!");
+        }
+    }
+
+    public void getStock(String name){
+        String apiKey = alphaVantageApiKey;
+        String symbol = name;
+        String apiUrl = "https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=" + symbol + "&apikey=" + apiKey;
+        checkApiCalls();
+
+        try {
+            URL url = new URL(apiUrl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+                String line;
+                StringBuilder response = new StringBuilder();
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+                reader.close();
+                conn.disconnect();
+
+                Gson gson = new Gson();
+                JsonObject jsonResponse = gson.fromJson(response.toString(), JsonObject.class);
+                JsonObject globalQuote = jsonResponse.getAsJsonObject("Global Quote");
+
+                // Process the response
+                Stock_blob stockBlob = new Stock_blob();
+                stockBlob.setSymbol(globalQuote.get("01. symbol").getAsString());
+                stockBlob.setValue(BigDecimal.valueOf(globalQuote.get("05. price").getAsDouble()));
+
+                Utils.Log("Adding stock "+stockBlob.getSymbol());
+
+                if (!stockList.containsKey(stockBlob.getSymbol().toUpperCase())) {
+                    stockList.put(stockBlob.getSymbol(), stockBlob);
+                    saveStock();
+                }
+
+                loadStockData(stockFilePath);
+
+            } else {
+                // Handle the error case
+                System.out.println("Error: " + responseCode);
+            }
+        } catch (ProtocolException e) {
+            throw new RuntimeException(e);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    @SuppressWarnings (value="unchecked")
+    @SuppressWarnings(value = "unchecked")
     public HashMap<String, Stock_blob> loadStockData(String stockFilePath) {
         HashMap<String, Stock_blob> stockBlobs = new HashMap<>();
         try {
@@ -135,7 +204,7 @@ public class Logic {
             stockList = (HashMap<String, Object>) oi.readObject();
             for (String key : stockList.keySet()) {
                 Stock_blob stock = (Stock_blob) stockList.get(key);
-                stockBlobs.put(key,stock);
+                stockBlobs.put(key, stock);
             }
 
             oi.close();
@@ -147,26 +216,50 @@ public class Logic {
         return stockBlobs;
     }
 
-    public Stock_blob getAddedStock(String symbol){
-        if (stockList.containsKey(symbol)){
+    @SuppressWarnings(value = "unchecked")
+    public HashMap<String, Investment_blob> loadInvestmentData(String investmentFilePath) {
+        HashMap<String, Investment_blob> investmentBlob = new HashMap<>();
+        try {
+            FileInputStream fi = new FileInputStream(investmentFilePath);
+            ObjectInputStream oi = new ObjectInputStream(fi);
+
+            investmentList = (HashMap<String, Object>) oi.readObject();
+            for (String key : investmentList.keySet()) {
+                Investment_blob investment = (Investment_blob) investmentList.get(key);
+                investmentBlob.put(key, investment);
+            }
+
+            oi.close();
+            fi.close();
+
+        } catch (IOException | ClassNotFoundException e) {
+            Utils.Log("Something went wrong with FileInputStream variable.");
+        }
+        return investmentBlob;
+    }
+
+    public Stock_blob getAddedStock(String symbol) {
+        if (stockList.containsKey(symbol)) {
             return (Stock_blob) stockList.get(symbol);
-        }else {
+        } else {
             return null;
         }
     }
 
-    public void removeStock(String symbol){
-        if (stockList.containsKey(symbol)){
+    public void removeStock(String symbol) {
+        if (stockList.containsKey(symbol)) {
             stockList.remove(symbol);
+            investmentList.remove(symbol);
             saveStock();
+            saveInvestment();
         }
     }
 
-    public void updateStock(Stock_blob stockBlob){
+    public void updateStock(Stock_blob stockBlob) {
         Stock_blob old_stock;
         if (stockList.get(stockBlob.getSymbol()) == null) {
             old_stock = new Stock_blob();
-        }else {
+        } else {
             old_stock = (Stock_blob) stockList.get(stockBlob.getSymbol());
         }
 
@@ -179,7 +272,7 @@ public class Logic {
 
         if (stockList.get(stockBlob.getSymbol()) != null) {
             stockList.replace(stockBlob.getSymbol(), old_stock);
-        }else {
+        } else {
             stockList.put(stockBlob.getSymbol(), old_stock);
         }
 
@@ -194,7 +287,7 @@ public class Logic {
             if (currency.equals(Constants.Pounds)) return Constants.GBP;
             if (currency.equals(Constants.Ron)) return Constants.RON;
             if (currency.equals("USD")) return 1;
-        }else {
+        } else {
             try {
 
                 // URL for the Open Exchange Rates API
@@ -230,174 +323,133 @@ public class Logic {
     }
 
     public void readXLSX(String xlsxPath) {
-        int dividendIndexSheet = 4;
-        int shareNameColumnIndex = 1;
-        int shareIndustryColumnIndex = 13;
-        int divPerQColumnIndex = 3;
-        int ownSharesColumnIndex = 8;
-        int investmentColumnIndex = 7;
-        int sectorColumnIndex = 12;
-
-        HashMap<String, String> shareSymbolReplacement = Constants.shareSymbolReplacement;
 
         try {
             FileInputStream fileInputStream = new FileInputStream(xlsxPath);
-            XSSFWorkbook  workBook = new XSSFWorkbook (fileInputStream);
-            XSSFSheet dividendAll = workBook.getSheetAt(dividendIndexSheet);
-            for (Row row : dividendAll) {
-                int rowNum = row.getRowNum();
-                if (rowNum>=2){
-                    String shareSymbol = row.getCell(shareNameColumnIndex).getStringCellValue();
-                    for (String origSymbol : shareSymbolReplacement.keySet()) {
-                        if (shareSymbol.equals(origSymbol)){
-                            shareSymbol = shareSymbolReplacement.get(origSymbol);
-                        }
-                    }
-                    getStock(shareSymbol);
-                    String shareIndustry = row.getCell(shareIndustryColumnIndex).getStringCellValue();
-                    double shareDivPerQ = (row.getCell(divPerQColumnIndex).getNumericCellValue())/100;
-                    double ownShareNum = row.getCell(ownSharesColumnIndex).getNumericCellValue();
-                    double investment = row.getCell(investmentColumnIndex).getNumericCellValue();
-                    String sector = row.getCell(sectorColumnIndex).getStringCellValue();
+            XSSFWorkbook workBook = new XSSFWorkbook(fileInputStream);
+            XSSFSheet dividendAll = workBook.getSheet(Constants.xmlDividendXMLSheetName);
+            XSSFSheet qInvestmentDetail = workBook.getSheet(Constants.xmlQInvestmentDetail);
 
-                    Stock_blob stockBlob = getAddedStock(shareSymbol);
-                    stockBlob.setIndustry(shareIndustry);
-                    stockBlob.setDivPerQ(shareDivPerQ);
-                    stockBlob.setOwnShares(ownShareNum);
-                    stockBlob.setInvestment(investment);
-                    stockBlob.setSector(sector);
-                    switch (shareSymbol){
-                        case "TRIG.L", "BSIF.L" -> {
-                            stockBlob.setValue(BigDecimal.valueOf(stockBlob.getValue()/100));
-                        }
-                    }
+            readXLSAllShares(dividendAll);
+            readXLSInvestment(qInvestmentDetail);
 
-                    updateStock(stockBlob);
-                }
-            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void removeAllStock(){
+    public void removeAllStock() {
         stockList.clear();
         saveStock();
+        investmentList.clear();
+        saveInvestment();
     }
 
     public void saveStock() {
         Utils.saveData(stockList, stockFilePath);
-        Utils.Log("The Object  was successfully written to a file");
+        Utils.Log("The stock list  was successfully written to a file");
     }
 
-    public double getTotalInvested(){
+    public void saveInvestment() {
+        Utils.saveData(investmentList, investmentFilePath);
+        Utils.Log("The Investment list was successfully written to " + investmentFilePath);
+    }
+
+    public double getTotalInvested() {
         double totalInvested = 0;
         for (Object object : stockList.values()) {
             Stock_blob stockBlob = (Stock_blob) object;
             String shareSymbol = stockBlob.getSymbol();
-            switch (shareSymbol){
-                case "TRIG.L", "BSIF.L" ->
-                    totalInvested += stockBlob.getInvestment()*getExchangeRateGBP();
-                case "MC.PA" ->
-                    totalInvested += stockBlob.getInvestment()*getExchangeRateEUR();
-                case "ENB" ->
-                    totalInvested += stockBlob.getInvestment()*getExchangeRateCAD();
-                default ->
-                    totalInvested += stockBlob.getInvestment();
+            switch (shareSymbol) {
+                case "TRIG.L", "BSIF.L" -> totalInvested += stockBlob.getInvestment() * getExchangeRateGBP();
+                case "MC.PA" -> totalInvested += stockBlob.getInvestment() * getExchangeRateEUR();
+                case "ENB" -> totalInvested += stockBlob.getInvestment() * getExchangeRateCAD();
+                default -> totalInvested += stockBlob.getInvestment();
             }
         }
         return totalInvested;
     }
 
-    public double getTotalProfit(){
+    public double getTotalProfit() {
         double totalProfit = 0;
         for (Object object : stockList.values()) {
             Stock_blob stockBlob = (Stock_blob) object;
             String shareSymbol = stockBlob.getSymbol();
-            switch (shareSymbol){
-                case "TRIG.L", "BSIF.L" ->
-                        totalProfit += stockBlob.getDivPerQ()*getExchangeRateGBP();
-                case "MC.PA" ->
-                        totalProfit += stockBlob.getDivPerQ()*getExchangeRateEUR();
-                case "ENB" ->
-                        totalProfit += stockBlob.getDivPerQ()*getExchangeRateCAD();
-                default ->
-                        totalProfit += stockBlob.getDivPerQ();
+            switch (shareSymbol) {
+                case "TRIG.L", "BSIF.L" -> totalProfit += stockBlob.getDivPerQ() * getExchangeRateGBP();
+                case "MC.PA" -> totalProfit += stockBlob.getDivPerQ() * getExchangeRateEUR();
+                case "ENB" -> totalProfit += stockBlob.getDivPerQ() * getExchangeRateCAD();
+                default -> totalProfit += stockBlob.getDivPerQ();
             }
         }
-        Utils.Log("Total profit: "+totalProfit+" $");
+        Utils.Log("Total profit: " + totalProfit + " $");
         return totalProfit;
     }
 
-    public double getTotalTax(){
+    public double getTotalTax() {
         double totalTax = 0;
         for (Object object : stockList.values()) {
             Stock_blob stockBlob = (Stock_blob) object;
             String shareSymbol = stockBlob.getSymbol();
-            switch (shareSymbol){
+            switch (shareSymbol) {
                 case "TRIG.L", "BSIF.L" ->
-                        totalTax += ((stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Constants.GBIncomeTax) / 100)*getExchangeRateGBP();
+                        totalTax += ((stockBlob.getDivPerQ() * stockBlob.getOwnShares() * Constants.GBIncomeTax) / 100) * getExchangeRateGBP();
                 case "MC.PA" ->
-                        totalTax += ((stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Constants.FRIncomeTax) / 100)*getExchangeRateEUR();
+                        totalTax += ((stockBlob.getDivPerQ() * stockBlob.getOwnShares() * Constants.FRIncomeTax) / 100) * getExchangeRateEUR();
                 case "ENB" ->
-                        totalTax += ((stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Constants.USAIncomeTax) / 100)*getExchangeRateCAD();
+                        totalTax += ((stockBlob.getDivPerQ() * stockBlob.getOwnShares() * Constants.USAIncomeTax) / 100) * getExchangeRateCAD();
                 case "TSM" ->
-                        totalTax += ((stockBlob.getDivPerQ())*stockBlob.getOwnShares()*Constants.TWIncomeTax) / 100;
+                        totalTax += ((stockBlob.getDivPerQ()) * stockBlob.getOwnShares() * Constants.TWIncomeTax) / 100;
                 default ->
-                        totalTax += ((stockBlob.getDivPerQ())*stockBlob.getOwnShares()*Constants.USAIncomeTax) / 100;
+                        totalTax += ((stockBlob.getDivPerQ()) * stockBlob.getOwnShares() * Constants.USAIncomeTax) / 100;
             }
         }
-        Utils.Log("Total tax: "+totalTax+" $");
+        Utils.Log("Total tax: " + totalTax + " $");
         return totalTax;
     }
 
-    public double getInvestmentPercent(String sector){
+    public double getInvestmentPercent(String sector) {
         double totalSectorInvestment = 0;
         for (Object object : stockList.values()) {
             Stock_blob stockBlob = (Stock_blob) object;
             String shareSector = stockBlob.getSector();
-            if (sector.equals(shareSector)){
+            if (sector.equals(shareSector)) {
                 String shareSymbol = stockBlob.getSymbol();
-                switch (shareSymbol){
+                switch (shareSymbol) {
                     case "TRIG.L", "BSIF.L" ->
-                            totalSectorInvestment += stockBlob.getInvestment()*getExchangeRateGBP();
-                    case "MC.PA" ->
-                            totalSectorInvestment += stockBlob.getInvestment()*getExchangeRateEUR();
-                    case "ENB" ->
-                            totalSectorInvestment += stockBlob.getInvestment()*getExchangeRateCAD();
-                    default ->
-                            totalSectorInvestment += stockBlob.getInvestment();
+                            totalSectorInvestment += stockBlob.getInvestment() * getExchangeRateGBP();
+                    case "MC.PA" -> totalSectorInvestment += stockBlob.getInvestment() * getExchangeRateEUR();
+                    case "ENB" -> totalSectorInvestment += stockBlob.getInvestment() * getExchangeRateCAD();
+                    default -> totalSectorInvestment += stockBlob.getInvestment();
                 }
             }
         }
         double percent = (totalSectorInvestment * 100) / getTotalInvested();
-        Utils.Log("Investment percent in "+sector+" sector: "+Constants.currencyFormat.format(percent)+" %");
+        Utils.Log("Investment percent in " + sector + " sector: " + Constants.currencyFormat.format(percent) + " %");
         return percent;
     }
 
-    public double getShareTax(String shareSymbol){
+    public double getShareTax(String shareSymbol) {
         double tax = 0;
         Stock_blob stockBlob = getAddedStock(shareSymbol);
-        switch (shareSymbol){
+        switch (shareSymbol) {
             case "TRIG.L", "BSIF.L" ->
-                    tax = ((stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Constants.GBIncomeTax) / 100)*getExchangeRateGBP();
+                    tax = ((stockBlob.getDivPerQ() * stockBlob.getOwnShares() * Constants.GBIncomeTax) / 100) * getExchangeRateGBP();
             case "MC.PA" ->
-                    tax = ((stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Constants.FRIncomeTax) / 100)*getExchangeRateEUR();
+                    tax = ((stockBlob.getDivPerQ() * stockBlob.getOwnShares() * Constants.FRIncomeTax) / 100) * getExchangeRateEUR();
             case "ENB" ->
-                    tax = ((stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Constants.USAIncomeTax) / 100)*getExchangeRateCAD();
-            case "TSM" ->
-                    tax = ((stockBlob.getDivPerQ())*stockBlob.getOwnShares()*Constants.TWIncomeTax) / 100;
-            default ->
-                    tax = ((stockBlob.getDivPerQ())*stockBlob.getOwnShares()*Constants.USAIncomeTax) / 100;
+                    tax = ((stockBlob.getDivPerQ() * stockBlob.getOwnShares() * Constants.USAIncomeTax) / 100) * getExchangeRateCAD();
+            case "TSM" -> tax = ((stockBlob.getDivPerQ()) * stockBlob.getOwnShares() * Constants.TWIncomeTax) / 100;
+            default -> tax = ((stockBlob.getDivPerQ()) * stockBlob.getOwnShares() * Constants.USAIncomeTax) / 100;
         }
-        Utils.Log("Tax for "+shareSymbol+" : "+tax+" $");
+        Utils.Log("Tax for " + shareSymbol + " : " + tax + " $");
         return tax;
     }
 
-    public String getShareLatestNews(String shareSymbol){
+    public String getShareLatestNews(String shareSymbol) {
         String urlString = "https://newsapi.org/v2/everything?q=" + shareSymbol + "&apiKey=" + newsApiKey;
 
-        StringBuilder news= new StringBuilder();
+        StringBuilder news = new StringBuilder();
 
         try {
             URL url = new URL(urlString);
@@ -427,5 +479,210 @@ public class Logic {
             news.append(DefaultLang.noNewsInfo).append(shareSymbol);
         }
         return news.toString();
+    }
+
+    public Investment_blob getAddedInvestment(String symbol) {
+        if (investmentList.containsKey(symbol)) {
+            return (Investment_blob) investmentList.get(symbol);
+        } else {
+            return null;
+        }
+    }
+
+    private void checkApiCalls() {
+        if (apiCallsDay > 0) {
+            if (apiCalls < 5) {
+                apiCalls += 1;
+                apiCallsDay -= 1;
+            } else {
+                try {
+                    Utils.Log("Waiting 1 min because you are using a free api finance !!!");
+                    TimeUnit.MINUTES.sleep(1);
+                    apiCalls = 1;
+                    apiCallsDay -= 1;
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            saveApiCalls();
+        }else {
+            Utils.Log("You are using a free api finance !!! Maxim api calls per day have been reached");
+        }
+    }
+
+    private void readXLSAllShares(XSSFSheet dividendAll) {
+        int shareNameColumnIndex = 1;
+        int div_shareIndustryColumnIndex = 13;
+        int div_divPerQColumnIndex = 3;
+        int div_ownSharesColumnIndex = 8;
+        int div_investmentColumnIndex = 7;
+        int div_sectorColumnIndex = 12;
+
+
+        HashMap<String, String> shareSymbolReplacement = Constants.shareSymbolReplacement;
+
+        for (Row row : dividendAll) {
+            int rowNum = row.getRowNum();
+            if (rowNum >= 2) {
+                String shareSymbol = row.getCell(shareNameColumnIndex).getStringCellValue();
+                for (String origSymbol : shareSymbolReplacement.keySet()) {
+                    if (shareSymbol.equals(origSymbol)) {
+                        shareSymbol = shareSymbolReplacement.get(origSymbol);
+                    }
+                }
+                getStock(shareSymbol);
+                String shareIndustry = row.getCell(div_shareIndustryColumnIndex).getStringCellValue();
+                double shareDivPerQ = (row.getCell(div_divPerQColumnIndex).getNumericCellValue()) / 100;
+                double ownShareNum = row.getCell(div_ownSharesColumnIndex).getNumericCellValue();
+                double investment = row.getCell(div_investmentColumnIndex).getNumericCellValue();
+                String sector = row.getCell(div_sectorColumnIndex).getStringCellValue();
+
+                Stock_blob stockBlob = getAddedStock(shareSymbol);
+                stockBlob.setIndustry(shareIndustry);
+                stockBlob.setDivPerQ(shareDivPerQ);
+                stockBlob.setOwnShares(ownShareNum);
+                stockBlob.setInvestment(investment);
+                stockBlob.setSector(sector);
+                switch (shareSymbol) {
+                    case "TRIG.L", "BSIF.L" -> {
+                        stockBlob.setValue(BigDecimal.valueOf(stockBlob.getValue() / 100));
+                    }
+                }
+
+                updateStock(stockBlob);
+            }
+        }
+    }
+
+    private void readXLSInvestment(XSSFSheet qInvestmentDetail) {
+        int filedColumns = 1;
+        HashMap<String, String> shareSymbolReplacement = Constants.shareSymbolReplacement;
+
+        Row row_header = qInvestmentDetail.getRow(1);
+        for (int i = 1; i < row_header.getLastCellNum(); i++) {
+            Cell cell = row_header.getCell(i);
+            if (!cell.getStringCellValue().equals("")) {
+                filedColumns += 1;
+            }
+        }
+
+        for (Row row : qInvestmentDetail) {
+            int rowNum = row.getRowNum();
+            if ((rowNum >= 2)) {
+                String shareSymbol = row.getCell(0).getStringCellValue();
+                for (String origSymbol : shareSymbolReplacement.keySet()) {
+                    if (shareSymbol.equals(origSymbol)) {
+                        shareSymbol = shareSymbolReplacement.get(origSymbol);
+                    }
+                }
+
+                Investment_blob investmentBlob = getAddedInvestment(shareSymbol);
+                if (investmentBlob == null) {
+                    investmentBlob = new Investment_blob();
+                    investmentBlob.setStockSymbol(shareSymbol);
+                }
+
+                short prompter_exchange = 2;
+                short prompter_investment = 3;
+                short prompter_price = 4;
+                short i = 0;
+
+                double exchange;
+                double price;
+                double investment;
+
+                while (prompter_price < filedColumns - 1) {
+                    exchange = row.getCell(prompter_exchange).getNumericCellValue();
+                    price = row.getCell(prompter_price).getNumericCellValue();
+                    investment = row.getCell(prompter_investment).getNumericCellValue();
+                    investmentBlob.setInvestment(investment, exchange, price);
+
+                    if (i < 3) {
+                        prompter_price += 3;
+                        prompter_exchange += 3;
+                        prompter_investment += 3;
+                        i += 1;
+                    } else {
+                        prompter_price += 4;
+                        prompter_investment += 4;
+                        prompter_exchange += 4;
+                        i = 0;
+                    }
+                }
+                investmentList.put(shareSymbol, investmentBlob);
+            }
+        }
+
+        saveInvestment();
+    }
+
+    public double computeNecessaryInvestment(String shareSymbol) {
+        double necessaryInvestment;
+        Investment_blob addedInvestment = getAddedInvestment(shareSymbol);
+        HashMap<Double, HashMap<Double, Double>> investment_struct = addedInvestment.getInvestment();
+
+        double mediumSharePrice = 0;
+        double mediumInvestment = 0;
+        int inv_size = 0;
+
+        for (Double investment : investment_struct.keySet()) {
+            HashMap<Double, Double> hashMap = investment_struct.get(investment);
+            for (Double exchangeRate : hashMap.keySet()) {
+                if (hashMap.get(exchangeRate) != 0) {
+                    mediumInvestment += investment * exchangeRate;
+                    mediumSharePrice += hashMap.get(exchangeRate);
+                    inv_size += 1;
+                }
+            }
+        }
+        mediumInvestment = mediumInvestment / inv_size;
+        int iter = 1;
+        if (mediumSharePrice > 0) {
+            mediumSharePrice = mediumSharePrice / inv_size;
+            double currentSharePrice = getAddedStock(shareSymbol).getValue();
+            double percentDiff = 0;
+            if (mediumSharePrice > currentSharePrice) {
+                while ((percentDiff < 30) && (iter<=10)) {
+                    double newMediumPrice = (mediumSharePrice + (currentSharePrice * iter)) / (iter + 1);
+                    double diff = mediumSharePrice - newMediumPrice;
+                    percentDiff = (diff * 100) / newMediumPrice;
+                    iter += 1;
+                }
+            }
+        }
+        necessaryInvestment = mediumInvestment * iter * getExchangeRateRON();
+        return necessaryInvestment;
+    }
+
+    private void saveApiCalls(){
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(Constants.apiCallsDay);
+            DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
+
+            dataOutputStream.writeInt(apiCallsDay);
+
+            dataOutputStream.close();
+            fileOutputStream.close();
+            Utils.Log("Save finance api calls with value: "+apiCallsDay);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadApiCals() {
+        try {
+            FileInputStream fileInputStream = new FileInputStream(Constants.apiCallsDay);
+            DataInputStream dataInputStream = new DataInputStream(fileInputStream);
+
+            int readNumber = dataInputStream.readInt();
+
+            dataInputStream.close();
+            fileInputStream.close();
+
+            apiCallsDay = readNumber;
+            Utils.Log("Load finance api calls with value: "+apiCallsDay);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
