@@ -1,9 +1,15 @@
 package org.homemade.stockmanager;
 
+import com.intellij.uiDesigner.core.GridConstraints;
 import org.homemade.Utils;
 import org.homemade.main.MainGuiLogic;
 import org.homemade.stockmanager.blobs.Stock_blob;
 import org.jetbrains.annotations.NotNull;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartFrame;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.general.DefaultPieDataset;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -52,28 +58,6 @@ public class GuiStockLogic extends Component {
     private JLabel totalProfitValue;
     private JLabel totalTaxLabel;
     private JLabel totalTaxValue;
-    private JLabel consumerCyclicalLabel;
-    private JLabel consumerCyclicalPercent;
-    private JLabel consumerDefensiveLabel;
-    private JLabel consumerDefensivePercent;
-    private JLabel energyLabel;
-    private JLabel energyPercent;
-    private JLabel financialServicesLabel;
-    private JLabel financialServicesPercent;
-    private JLabel industrialLabel;
-    private JLabel industrialPercent;
-    private JLabel realEstateLabel;
-    private JLabel realEstatePercent;
-    private JLabel technologyLabel;
-    private JLabel technologyPercent;
-    private JLabel healthcareLabel;
-    private JLabel healthcarePercent;
-    private JLabel communicationServicesLabel;
-    private JLabel communicationServicesPercent;
-    private JLabel utilitiesLabel;
-    private JLabel utilitiesPercent;
-    private JLabel basicMaterialsLabel;
-    private JLabel basicMaterialsPercent;
     private JLabel shareSelectedLabel;
     private JLabel shareInvestmentLabel;
     private JLabel shareInvestmentValue;
@@ -92,6 +76,7 @@ public class GuiStockLogic extends Component {
     private JScrollPane newsJScroll;
     private JLabel recomendedInvestmentLabel;
     private JLabel recomendedInvestmentValue;
+    private JPanel pieChartPanel;
     private JFileChooser xmlImporter;
     private JFileChooser pathLocation;
     private JMenu menu;
@@ -125,18 +110,6 @@ public class GuiStockLogic extends Component {
         totalInvestedLabel.setText(DefaultLang.totalInvestmentLabel);
         totalProfitLabel.setText(DefaultLang.totalProfitLabel);
         totalTaxLabel.setText(DefaultLang.totalTaxLabel);
-
-        consumerCyclicalLabel.setText(DefaultLang.consumerCyclicalLabel);
-        consumerDefensiveLabel.setText(DefaultLang.consumerDefensiveLabel);
-        energyLabel.setText(DefaultLang.energyLabel);
-        financialServicesLabel.setText(DefaultLang.financialServicesLabel);
-        industrialLabel.setText(DefaultLang.industrialLabel);
-        realEstateLabel.setText(DefaultLang.realEstateLabel);
-        technologyLabel.setText(DefaultLang.technologyLabel);
-        healthcareLabel.setText(DefaultLang.healthcareLabel);
-        communicationServicesLabel.setText(DefaultLang.communicationServicesLabel);
-        utilitiesLabel.setText(DefaultLang.utilitiesLabel);
-        basicMaterialsLabel.setText(DefaultLang.basicMaterialsLabel);
 
         stockPanel.setVisible(true);
 
@@ -419,17 +392,35 @@ public class GuiStockLogic extends Component {
         totalProfitValue.setText(Constants.currencyFormat.format(Logic.getInstance().getTotalProfit()*Logic.getInstance().getExchangeRateRON()) + " RON");
         totalTaxValue.setText(Constants.currencyFormat.format(Logic.getInstance().getTotalTax()*Logic.getInstance().getExchangeRateRON()) + " RON");
 
-        consumerCyclicalPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.consumerCyclicalLabel)) + " %");
-        consumerDefensivePercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.consumerDefensiveLabel)) + " %");
-        industrialPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.industrialLabel)) + " %");
-        energyPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.energyLabel)) + " %");
-        financialServicesPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.financialServicesLabel)) + " %");
-        realEstatePercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.realEstateLabel)) + " %");
-        technologyPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.technologyLabel)) + " %");
-        healthcarePercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.healthcareLabel)) + " %");
-        utilitiesPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.utilitiesLabel)) + " %");
-        basicMaterialsPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.basicMaterialsLabel)) + " %");
-        communicationServicesPercent.setText(Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.communicationServicesLabel)) + " %");
+        String percentLabelConsumerCyclical = " ("+Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.consumerCyclicalLabel))+"%)";
+        String percentLabelConsumerDefensive = " ("+Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.consumerDefensiveLabel))+"%)";
+        String percentLabelIndustrial = " ("+Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.industrialLabel))+"%)";
+        String percentLabelEnergy = " ("+Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.energyLabel))+"%)";
+        String percentLabelFinancialServices = " ("+Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.financialServicesLabel))+"%)";
+        String percentLabelRealEstate = " ("+Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.realEstateLabel))+"%)";
+        String percentLabelTechnology = " ("+Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.technologyLabel))+"%)";
+        String percentLabelHealthCare = " ("+Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.healthcareLabel))+"%)";
+        String percentLabelUtilities = " ("+Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.utilitiesLabel))+"%)";
+        String percentLabelBasicMaterials = " ("+Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.basicMaterialsLabel))+"%)";
+        String percentLabelCommunicationServices = " ("+Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.communicationServicesLabel))+"%)";
+
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        dataset.setValue(DefaultLang.consumerCyclicalLabel + percentLabelConsumerCyclical, Logic.getInstance().getInvestmentPercent(DefaultLang.consumerCyclicalLabel));
+        dataset.setValue(DefaultLang.consumerDefensiveLabel + percentLabelConsumerDefensive, Logic.getInstance().getInvestmentPercent(DefaultLang.consumerDefensiveLabel));
+        dataset.setValue(DefaultLang.industrialLabel + percentLabelIndustrial, Logic.getInstance().getInvestmentPercent(DefaultLang.industrialLabel));
+        dataset.setValue(DefaultLang.energyLabel + percentLabelEnergy, Logic.getInstance().getInvestmentPercent(DefaultLang.energyLabel));
+        dataset.setValue(DefaultLang.financialServicesLabel + percentLabelFinancialServices, Logic.getInstance().getInvestmentPercent(DefaultLang.financialServicesLabel));
+        dataset.setValue(DefaultLang.realEstateLabel + percentLabelRealEstate, Logic.getInstance().getInvestmentPercent(DefaultLang.realEstateLabel));
+        dataset.setValue(DefaultLang.technologyLabel + percentLabelTechnology, Logic.getInstance().getInvestmentPercent(DefaultLang.technologyLabel));
+        dataset.setValue(DefaultLang.healthcareLabel + percentLabelHealthCare, Logic.getInstance().getInvestmentPercent(DefaultLang.healthcareLabel));
+        dataset.setValue(DefaultLang.utilitiesLabel + percentLabelUtilities, Logic.getInstance().getInvestmentPercent(DefaultLang.utilitiesLabel));
+        dataset.setValue(DefaultLang.basicMaterialsLabel + percentLabelBasicMaterials, Logic.getInstance().getInvestmentPercent(DefaultLang.basicMaterialsLabel));
+        dataset.setValue(DefaultLang.communicationServicesLabel + percentLabelCommunicationServices, Logic.getInstance().getInvestmentPercent(DefaultLang.communicationServicesLabel));
+
+        JFreeChart chart = ChartFactory.createPieChart("Pie Chart", dataset, true, true, false);
+        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPreferredSize(new java.awt.Dimension(400, 300));
+        pieChartPanel.add(chartPanel,new GridConstraints());
     }
 
     public void initShareDetailInformation(String shareSelected){
@@ -545,6 +536,21 @@ public class GuiStockLogic extends Component {
         removeButton.setEnabled(true);
     }
 
+    public void showPieChart(){
+        // Create a dataset for the pie chart
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        dataset.setValue("Category 1", 20);
+        dataset.setValue("Category 2", 30);
+        dataset.setValue("Category 3", 50);
+
+        // Create the chart using the dataset
+        JFreeChart chart = ChartFactory.createPieChart("Pie Chart", dataset, true, true, false);
+
+        // Create a frame to display the chart
+        ChartFrame frame = new ChartFrame("Pie Chart", chart);
+        frame.pack();
+        frame.setVisible(true);
+    }
 
 
 }
