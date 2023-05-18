@@ -31,6 +31,8 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
 
+import javax.swing.*;
+
 public class Logic {
 
     private static Logic instance;
@@ -76,6 +78,7 @@ public class Logic {
             getExchangeRates();
             loadApiCals();
         } catch (IOException e) {
+            showPopUpError(e.getMessage());
             throw new RuntimeException(e);
         }
 
@@ -88,6 +91,7 @@ public class Logic {
             newsApiKey = FileUtils.readLines(apiKeyFile).get(1);
             alphaVantageApiKey = FileUtils.readLines(apiKeyFile).get(2);
         } catch (IOException e) {
+            showPopUpError(e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -134,10 +138,13 @@ public class Logic {
 
             loadStockData(stockFilePath);
         } catch (RuntimeException e) {
+            showPopUpError(e.getMessage());
             Utils.Log(e.getMessage());
         } catch (IOException e) {
             Utils.Log(e.getMessage());
             Utils.Log("Yahoo server connection failed !!!!");
+            Utils.Log("Switching to alphaVantageApi.");
+            getStock(name);
         }
     }
 
@@ -185,11 +192,8 @@ public class Logic {
                 // Handle the error case
                 System.out.println("Error: " + responseCode);
             }
-        } catch (ProtocolException e) {
-            throw new RuntimeException(e);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
+            showPopUpError(e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -211,6 +215,7 @@ public class Logic {
             fi.close();
 
         } catch (IOException | ClassNotFoundException e) {
+            showPopUpError(e.getMessage());
             Utils.Log("Something went wrong with FileInputStream variable.");
         }
         return stockBlobs;
@@ -233,6 +238,7 @@ public class Logic {
             fi.close();
 
         } catch (IOException | ClassNotFoundException e) {
+            showPopUpError(e.getMessage());
             Utils.Log("Something went wrong with FileInputStream variable.");
         }
         return investmentBlob;
@@ -316,6 +322,7 @@ public class Logic {
 
                 return exchangeRate;
             } catch (IOException e) {
+                showPopUpError(e.getMessage());
                 throw new RuntimeException(e);
             }
         }
@@ -334,6 +341,7 @@ public class Logic {
             readXLSInvestment(qInvestmentDetail);
 
         } catch (IOException e) {
+            showPopUpError(e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -476,6 +484,7 @@ public class Logic {
             }
         } catch (IOException | JSONException e) {
             System.out.println(e.getMessage());
+            showPopUpError(e.getMessage());
             news.append(DefaultLang.noNewsInfo).append(shareSymbol);
         }
         return news.toString();
@@ -501,6 +510,7 @@ public class Logic {
                     apiCalls = 1;
                     apiCallsDay -= 1;
                 } catch (InterruptedException e) {
+                    showPopUpError(e.getMessage());
                     throw new RuntimeException(e);
                 }
             }
@@ -530,7 +540,7 @@ public class Logic {
                         shareSymbol = shareSymbolReplacement.get(origSymbol);
                     }
                 }
-                getStock(shareSymbol);
+                getStock_yahoo(shareSymbol);
                 String shareIndustry = row.getCell(div_shareIndustryColumnIndex).getStringCellValue();
                 double shareDivPerQ = (row.getCell(div_divPerQColumnIndex).getNumericCellValue()) / 100;
                 double ownShareNum = row.getCell(div_ownSharesColumnIndex).getNumericCellValue();
@@ -665,6 +675,7 @@ public class Logic {
             fileOutputStream.close();
             Utils.Log("Save finance api calls with value: "+apiCallsDay);
         } catch (IOException e) {
+            showPopUpError(e.getMessage());
             e.printStackTrace();
         }
     }
@@ -682,7 +693,12 @@ public class Logic {
             apiCallsDay = readNumber;
             Utils.Log("Load finance api calls with value: "+apiCallsDay);
         } catch (IOException e) {
+            showPopUpError(e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void showPopUpError(String message){
+        JOptionPane.showMessageDialog(null, message, "", JOptionPane.WARNING_MESSAGE);
     }
 }

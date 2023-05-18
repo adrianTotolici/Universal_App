@@ -348,7 +348,7 @@
                       <text value="Label"/>
                     </properties>
                   </component>
-                  <component id="320b4" class="javax.swing.JLabel" binding="recomendedInvestmentLabel">
+                  <component id="320b4" class="javax.swing.JLabel" binding="recommendedInvestmentLabel">
                     <constraints>
                       <grid row="7" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
@@ -356,7 +356,7 @@
                       <text value="Label"/>
                     </properties>
                   </component>
-                  <component id="f1da2" class="javax.swing.JLabel" binding="recomendedInvestmentValue">
+                  <component id="f1da2" class="javax.swing.JLabel" binding="recommendedInvestmentValue">
                     <constraints>
                       <grid row="7" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
                     </constraints>
@@ -378,7 +378,7 @@
                 <properties/>
                 <border type="none"/>
                 <children>
-                  <scrollpane id="d51e4" binding="newsJScroll">
+                  <scrollpane id="d51e4">
                     <constraints>
                       <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                     </constraints>
