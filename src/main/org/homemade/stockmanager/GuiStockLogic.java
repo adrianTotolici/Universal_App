@@ -6,7 +6,6 @@ import org.homemade.main.MainGuiLogic;
 import org.homemade.stockmanager.blobs.Stock_blob;
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartFrame;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.general.DefaultPieDataset;
@@ -40,8 +39,8 @@ public class GuiStockLogic extends Component {
     private JLabel investmentLabel;
     private JLabel sectorLabel;
     private JLabel industryLabel;
-    private JComboBox sectorComboBox;
-    private JComboBox industryComboBox;
+    private JComboBox<String> sectorComboBox;
+    private JComboBox<String> industryComboBox;
     private JLabel payDateLabel;
     private JTextField payDateText;
     private JButton importDataButton;
@@ -73,13 +72,11 @@ public class GuiStockLogic extends Component {
     private JLabel sharePayDayValue;
     private JPanel shareDetailInformationPanel;
     private JTextPane shareNewsPane;
-    private JScrollPane newsJScroll;
-    private JLabel recomendedInvestmentLabel;
-    private JLabel recomendedInvestmentValue;
+    private JLabel recommendedInvestmentLabel;
+    private JLabel recommendedInvestmentValue;
     private JPanel pieChartPanel;
     private JFileChooser xmlImporter;
     private JFileChooser pathLocation;
-    private JMenu menu;
 
     public GuiStockLogic(JFrame jFrame) {
         this.jFrame = jFrame;
@@ -316,7 +313,7 @@ public class GuiStockLogic extends Component {
                     Utils.Log("()");
                     String newStockName = newStockField.getText().toUpperCase();
                     newStockField.setText("");
-                    Logic.getInstance().getStock(newStockName);
+                    Logic.getInstance().getStock_yahoo(newStockName);
                     updateStockTable(false);
                 }
             }
@@ -365,7 +362,7 @@ public class GuiStockLogic extends Component {
 
     public void initMenuBar(){
         JMenuBar menuBar = new JMenuBar();
-        menu = new JMenu("Menu");
+        JMenu menu = new JMenu("Menu");
         JMenuItem menuButtonSavePathData = new JMenuItem("Save data path");
         menu.add(menuButtonSavePathData);
         menuBar.add(menu);
@@ -404,7 +401,7 @@ public class GuiStockLogic extends Component {
         String percentLabelBasicMaterials = " ("+Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.basicMaterialsLabel))+"%)";
         String percentLabelCommunicationServices = " ("+Constants.currencyFormat.format(Logic.getInstance().getInvestmentPercent(DefaultLang.communicationServicesLabel))+"%)";
 
-        DefaultPieDataset dataset = new DefaultPieDataset();
+        DefaultPieDataset<String> dataset = new DefaultPieDataset<>();
         dataset.setValue(DefaultLang.consumerCyclicalLabel + percentLabelConsumerCyclical, Logic.getInstance().getInvestmentPercent(DefaultLang.consumerCyclicalLabel));
         dataset.setValue(DefaultLang.consumerDefensiveLabel + percentLabelConsumerDefensive, Logic.getInstance().getInvestmentPercent(DefaultLang.consumerDefensiveLabel));
         dataset.setValue(DefaultLang.industrialLabel + percentLabelIndustrial, Logic.getInstance().getInvestmentPercent(DefaultLang.industrialLabel));
@@ -432,7 +429,7 @@ public class GuiStockLogic extends Component {
         shareAnnouncementLabel.setText(DefaultLang.shareAnnouncementLabel);
         shareExDividendLabel.setText(DefaultLang.shareExDividendLabel);
         sharePayDayLabel.setText(DefaultLang.sharePayDayLabel);
-        recomendedInvestmentLabel.setText(DefaultLang.recommendedInvestment);
+        recommendedInvestmentLabel.setText(DefaultLang.recommendedInvestment);
 
         Stock_blob stockBlob = Logic.getInstance().getAddedStock(shareSelected);
 
@@ -443,7 +440,7 @@ public class GuiStockLogic extends Component {
         shareAnnouncementValue.setText(String.valueOf(stockBlob.getAnnoucementDate()));
         shareExDividendValue.setText(String.valueOf(stockBlob.getExDividendDate()));
         sharePayDayValue.setText(String.valueOf(stockBlob.getPayDate()));
-        recomendedInvestmentValue.setText(Constants.currencyFormat.format(Logic.getInstance().computeNecessaryInvestment(shareSelected))+" RON");
+        recommendedInvestmentValue.setText(Constants.currencyFormat.format(Logic.getInstance().computeNecessaryInvestment(shareSelected))+" RON");
 
         shareNewsPane.setText(Logic.getInstance().getShareLatestNews(stockBlob.getName()));
         shareNewsPane.setSelectionStart(0);
@@ -536,21 +533,7 @@ public class GuiStockLogic extends Component {
         removeButton.setEnabled(true);
     }
 
-    public void showPieChart(){
-        // Create a dataset for the pie chart
-        DefaultPieDataset dataset = new DefaultPieDataset();
-        dataset.setValue("Category 1", 20);
-        dataset.setValue("Category 2", 30);
-        dataset.setValue("Category 3", 50);
 
-        // Create the chart using the dataset
-        JFreeChart chart = ChartFactory.createPieChart("Pie Chart", dataset, true, true, false);
-
-        // Create a frame to display the chart
-        ChartFrame frame = new ChartFrame("Pie Chart", chart);
-        frame.pack();
-        frame.setVisible(true);
-    }
 
 
 }
