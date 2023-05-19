@@ -13,7 +13,7 @@ public class Main {
         window.setExtendedState(JFrame.MAXIMIZED_BOTH);
         window.setName(DefaultLang.windowName);
         window.setUndecorated(false);
-        window.setVisible(true);
         MainGuiLogic.getInstance(window).init();
+        window.setVisible(true);
     }
 }
