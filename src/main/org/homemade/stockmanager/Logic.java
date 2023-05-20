@@ -399,18 +399,7 @@ public class Logic {
         for (Object object : stockList.values()) {
             Stock_blob stockBlob = (Stock_blob) object;
             String shareSymbol = stockBlob.getSymbol();
-            switch (shareSymbol) {
-                case "TRIG.L", "BSIF.L" ->
-                        totalTax += ((stockBlob.getDivPerQ() * stockBlob.getOwnShares() * Constants.GBIncomeTax) / 100) * getExchangeRateGBP();
-                case "MC.PA" ->
-                        totalTax += ((stockBlob.getDivPerQ() * stockBlob.getOwnShares() * Constants.FRIncomeTax) / 100) * getExchangeRateEUR();
-                case "ENB" ->
-                        totalTax += ((stockBlob.getDivPerQ() * stockBlob.getOwnShares() * Constants.USAIncomeTax) / 100) * getExchangeRateCAD();
-                case "TSM" ->
-                        totalTax += ((stockBlob.getDivPerQ()) * stockBlob.getOwnShares() * Constants.TWIncomeTax) / 100;
-                default ->
-                        totalTax += ((stockBlob.getDivPerQ()) * stockBlob.getOwnShares() * Constants.USAIncomeTax) / 100;
-            }
+            totalTax +=getShareTax(shareSymbol);
         }
         Utils.Log("Total tax: " + totalTax + " $");
         return totalTax;
