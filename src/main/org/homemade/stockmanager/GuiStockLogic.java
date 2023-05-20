@@ -156,7 +156,7 @@ public class GuiStockLogic extends Component {
                         investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateEUR();
                     }
                     profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
-                    tax = (profit * Constants.FRIncomeTax) / 100;
+                    tax = Logic.getInstance().getShareTax(stockBlob.getSymbol());
                     profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateEUR();
                     currencySymbol = "€";
                 }
@@ -167,7 +167,7 @@ public class GuiStockLogic extends Component {
                         investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateGBP();
                     }
                     profit = (stockBlob.getOwnShares() * stockBlob.getDivPerQ())/100;
-                    tax = (profit * Constants.GBIncomeTax) / 100;
+                    tax = Logic.getInstance().getShareTax(stockBlob.getSymbol());
                     profitRON = (((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateGBP())/100;
                     currencySymbol = "£";
                 }
@@ -178,20 +178,9 @@ public class GuiStockLogic extends Component {
                         investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateCAD();
                     }
                     profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
-                    tax = (profit * Constants.USAIncomeTax) / 100;
+                    tax = Logic.getInstance().getShareTax(stockBlob.getSymbol());
                     profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateCAD();
                     currencySymbol = "c$";
-                }
-                case  "TSM" -> {
-                    if (importData) {
-                        investment = stockBlob.getInvestment();
-                    }else {
-                        investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateRON();
-                    }
-                    profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
-                    tax = (profit * Constants.TWIncomeTax) / 100;
-                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateRON();
-                    currencySymbol = "$";
                 }
                 default -> {
                     if (importData) {
@@ -200,7 +189,7 @@ public class GuiStockLogic extends Component {
                         investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateRON();
                     }
                     profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
-                    tax = (profit * Constants.USAIncomeTax) / 100;
+                    tax = Logic.getInstance().getShareTax(stockBlob.getSymbol());
                     profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateRON();
                     currencySymbol = "$";
                 }
