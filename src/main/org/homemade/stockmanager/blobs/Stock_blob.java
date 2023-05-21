@@ -3,7 +3,10 @@ package org.homemade.stockmanager.blobs;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 public class Stock_blob implements Serializable {
 
@@ -15,7 +18,7 @@ public class Stock_blob implements Serializable {
     private String sector;
     private String industry;
     private double value;
-    private double divPerQ;
+    private List<Double> divPerQ;
     private double ownShares;
     private double investment;
     private Date payDate;
@@ -48,12 +51,19 @@ public class Stock_blob implements Serializable {
         this.value = value.doubleValue();
     }
 
-    public double getDivPerQ() {
+    public List<Double> getDivPerQ() {
         return divPerQ;
     }
 
     public void setDivPerQ(double divPerQ) {
-        this.divPerQ = divPerQ;
+        if (null == this.divPerQ){
+            this.divPerQ = new ArrayList<>();
+        }
+        this.divPerQ.add(divPerQ);
+    }
+
+    public double getLastDicPerQ(){
+        return this.divPerQ.get(divPerQ.size()-1);
     }
 
     public double getOwnShares() {

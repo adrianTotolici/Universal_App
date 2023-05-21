@@ -4,6 +4,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import org.homemade.Utils;
 import org.homemade.main.MainGuiLogic;
 import org.homemade.stockmanager.blobs.Stock_blob;
+import org.homemade.stockmanager.graphics.GraphDisplay;
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -16,6 +17,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 
 public class GuiStockLogic extends Component {
 
@@ -75,6 +77,7 @@ public class GuiStockLogic extends Component {
     private JLabel recommendedInvestmentLabel;
     private JLabel recommendedInvestmentValue;
     private JPanel pieChartPanel;
+    private JButton showDivHistoryButton;
     private JFileChooser xmlImporter;
     private JFileChooser pathLocation;
 
@@ -148,6 +151,9 @@ public class GuiStockLogic extends Component {
 
             Stock_blob stockBlob = stockBlobs.get(key);
 
+            tax = Logic.getInstance().getShareTax(stockBlob.getSymbol());
+            profitRON = (Logic.getInstance().getShareProfit(stockBlob.getSymbol()) - tax);
+
             switch (stockBlob.getSymbol()) {
                 case "MC.PA" -> {
                     if (importData) {
@@ -155,9 +161,7 @@ public class GuiStockLogic extends Component {
                     }else {
                         investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateEUR();
                     }
-                    profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
-                    tax = Logic.getInstance().getShareTax(stockBlob.getSymbol());
-                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateEUR();
+                    profit = Logic.getInstance().getShareProfit(stockBlob.getSymbol()) / Logic.getInstance().getExchangeRateEUR();
                     currencySymbol = "€";
                 }
                 case "TRIG.L", "BSIF.L" -> {
@@ -166,9 +170,7 @@ public class GuiStockLogic extends Component {
                     }else {
                         investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateGBP();
                     }
-                    profit = (stockBlob.getOwnShares() * stockBlob.getDivPerQ())/100;
-                    tax = Logic.getInstance().getShareTax(stockBlob.getSymbol());
-                    profitRON = (((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateGBP())/100;
+                    profit = Logic.getInstance().getShareProfit(stockBlob.getSymbol()) / Logic.getInstance().getExchangeRateGBP();
                     currencySymbol = "£";
                 }
                 case "ENB" -> {
@@ -177,9 +179,7 @@ public class GuiStockLogic extends Component {
                     }else {
                         investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateCAD();
                     }
-                    profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
-                    tax = Logic.getInstance().getShareTax(stockBlob.getSymbol());
-                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateCAD();
+                    profit = Logic.getInstance().getShareProfit(stockBlob.getSymbol()) / stockBlob.getLastDicPerQ();
                     currencySymbol = "c$";
                 }
                 default -> {
@@ -188,17 +188,17 @@ public class GuiStockLogic extends Component {
                     }else {
                         investment = stockBlob.getInvestment() / Logic.getInstance().getExchangeRateRON();
                     }
-                    profit = stockBlob.getOwnShares() * stockBlob.getDivPerQ();
-                    tax = Logic.getInstance().getShareTax(stockBlob.getSymbol());
-                    profitRON = ((stockBlob.getOwnShares() * stockBlob.getDivPerQ()) - tax) * Logic.getInstance().getExchangeRateRON();
+                    profit = Logic.getInstance().getShareProfit(stockBlob.getSymbol()) / Logic.getInstance().getExchangeRateRON();
                     currencySymbol = "$";
                 }
             }
 
+
+
             row[0] = stockBlob.getSymbol();
             row[1] = stockBlob.getName();
             row[2] = currencySymbol + " " + Constants.currencyFormat.format(stockBlob.getValue());
-            row[3] = currencySymbol + " " + Constants.dividendPayFormat.format(stockBlob.getDivPerQ());
+            row[3] = currencySymbol + " " + Constants.dividendPayFormat.format(stockBlob.getLastDicPerQ());
             row[4] = stockBlob.getOwnShares();
             row[5] = currencySymbol + " " + Constants.currencyFormat.format(investment);
             row[6] = currencySymbol + " " + Constants.currencyFormat.format(profit-tax);
@@ -324,6 +324,12 @@ public class GuiStockLogic extends Component {
             }
         });
 
+        showDivHistoryButton.addActionListener(e -> {
+            int selectedRow = stockTable.getSelectedRow();
+            String selectedData = (String) stockTable.getValueAt(selectedRow, 0);
+            showDividendHistory(selectedData);
+        });
+
         ListSelectionModel rowSelectionModel = stockTable.getSelectionModel();
         rowSelectionModel.addListSelectionListener(e -> {
             if (! rowSelectionModel.isSelectionEmpty()) {
@@ -331,6 +337,7 @@ public class GuiStockLogic extends Component {
                 String selectedData = (String) stockTable.getValueAt(selectedRow, 0);
                 System.out.println("Selected: " + selectedData);
                 initShareDetailInformation(selectedData);
+                showDivHistoryButton.setVisible(true);
             }
         });
 
@@ -407,6 +414,9 @@ public class GuiStockLogic extends Component {
         ChartPanel chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new java.awt.Dimension(400, 300));
         pieChartPanel.add(chartPanel,new GridConstraints());
+
+        showDivHistoryButton.setText(DefaultLang.dividendHistoryButton);
+        showDivHistoryButton.setVisible(false);
     }
 
     public void initShareDetailInformation(String shareSelected){
@@ -425,7 +435,7 @@ public class GuiStockLogic extends Component {
         shareSelectedLabel.setText(stockBlob.getName());
         shareInvestmentValue.setText(Constants.dividendPayFormat.format(stockBlob.getInvestment()* Logic.getInstance().getExchangeRateRON())+" RON");
         shareTaxValue.setText(Constants.dividendPayFormat.format(Logic.getInstance().getShareTax(shareSelected)*Logic.getInstance().getExchangeRateRON())+" RON");
-        shareProfitValue.setText(Constants.dividendPayFormat.format(stockBlob.getDivPerQ()*stockBlob.getOwnShares()*Logic.getInstance().getExchangeRateRON())+ " RON");
+        shareProfitValue.setText(Constants.dividendPayFormat.format(Logic.getInstance().getShareProfit(shareSelected)*Logic.getInstance().getExchangeRateRON())+ " RON");
         shareAnnouncementValue.setText(String.valueOf(stockBlob.getAnnoucementDate()));
         shareExDividendValue.setText(String.valueOf(stockBlob.getExDividendDate()));
         sharePayDayValue.setText(String.valueOf(stockBlob.getPayDate()));
@@ -434,6 +444,7 @@ public class GuiStockLogic extends Component {
         shareNewsPane.setText(Logic.getInstance().getShareLatestNews(stockBlob.getName()));
         shareNewsPane.setSelectionStart(0);
         shareNewsPane.setSelectionEnd(0);
+
     }
 
     public void populateEditPanel(@NotNull Stock_blob stockBlob){
@@ -522,7 +533,23 @@ public class GuiStockLogic extends Component {
         removeButton.setEnabled(true);
     }
 
+    public void showDividendHistory(String shareName){
+        Stock_blob stockBlob = Logic.getInstance().getAddedStock(shareName);
+        List<Double> divPerQ = stockBlob.getDivPerQ();
+        double[] data =new double[divPerQ.size()];
+        int i= 0;
+        for (Double aDouble : divPerQ) {
+            data[i] = aDouble;
+            i++;
+        }
 
+        JFrame frame = new JFrame(shareName);
+        frame.setSize(400, 300);
+
+        GraphDisplay graphDisplay = new GraphDisplay(data);
+        frame.add(graphDisplay);
+        frame.setVisible(true);
+    }
 
 
 }
