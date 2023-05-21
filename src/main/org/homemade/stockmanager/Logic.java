@@ -270,7 +270,7 @@ public class Logic {
         }
 
         old_stock.setIndustry(stockBlob.getIndustry());
-        old_stock.setDivPerQ(stockBlob.getDivPerQ());
+        old_stock.setDivPerQ(stockBlob.getLastDicPerQ());
         old_stock.setOwnShares(stockBlob.getOwnShares());
         old_stock.setInvestment(stockBlob.getInvestment());
         old_stock.setSector(stockBlob.getSector());
@@ -383,12 +383,7 @@ public class Logic {
         for (Object object : stockList.values()) {
             Stock_blob stockBlob = (Stock_blob) object;
             String shareSymbol = stockBlob.getSymbol();
-            switch (shareSymbol) {
-                case "TRIG.L", "BSIF.L" -> totalProfit += stockBlob.getDivPerQ() * getExchangeRateGBP();
-                case "MC.PA" -> totalProfit += stockBlob.getDivPerQ() * getExchangeRateEUR();
-                case "ENB" -> totalProfit += stockBlob.getDivPerQ() * getExchangeRateCAD();
-                default -> totalProfit += stockBlob.getDivPerQ();
-            }
+            totalProfit += getShareProfit(shareSymbol);
         }
         Utils.Log("Total profit: " + totalProfit + " $");
         return totalProfit;
@@ -427,20 +422,32 @@ public class Logic {
     }
 
     public double getShareTax(String shareSymbol) {
-        double tax = 0;
+        double tax;
         Stock_blob stockBlob = getAddedStock(shareSymbol);
         switch (shareSymbol) {
             case "TRIG.L", "BSIF.L" ->
-                    tax = ((stockBlob.getDivPerQ() * stockBlob.getOwnShares() * Constants.GBIncomeTax) / 100) * getExchangeRateGBP();
+                    tax = ((stockBlob.getLastDicPerQ() * stockBlob.getOwnShares() * Constants.GBIncomeTax) / 100) * getExchangeRateGBP();
             case "MC.PA" ->
-                    tax = ((stockBlob.getDivPerQ() * stockBlob.getOwnShares() * Constants.FRIncomeTax) / 100) * getExchangeRateEUR();
+                    tax = ((stockBlob.getLastDicPerQ() * stockBlob.getOwnShares() * Constants.FRIncomeTax) / 100) * getExchangeRateEUR();
             case "ENB" ->
-                    tax = ((stockBlob.getDivPerQ() * stockBlob.getOwnShares() * Constants.USAIncomeTax) / 100) * getExchangeRateCAD();
-            case "TSM" -> tax = ((stockBlob.getDivPerQ()) * stockBlob.getOwnShares() * Constants.TWIncomeTax) / 100;
-            default -> tax = ((stockBlob.getDivPerQ()) * stockBlob.getOwnShares() * Constants.USAIncomeTax) / 100;
+                    tax = ((stockBlob.getLastDicPerQ() * stockBlob.getOwnShares() * Constants.USAIncomeTax) / 100) * getExchangeRateCAD();
+            case "TSM" -> tax = ((stockBlob.getLastDicPerQ()) * stockBlob.getOwnShares() * Constants.TWIncomeTax) / 100;
+            default -> tax = ((stockBlob.getLastDicPerQ()) * stockBlob.getOwnShares() * Constants.USAIncomeTax) / 100;
         }
         Utils.Log("Tax for " + shareSymbol + " : " + tax + " $");
         return tax;
+    }
+
+    public double getShareProfit(String shareSymbol){
+        double profit;
+        Stock_blob stockBlob = getAddedStock(shareSymbol);
+        switch (shareSymbol) {
+            case "TRIG.L", "BSIF.L" -> profit = stockBlob.getLastDicPerQ() * getExchangeRateGBP() * stockBlob.getOwnShares()/100;
+            case "MC.PA" -> profit = stockBlob.getLastDicPerQ() * getExchangeRateEUR() * stockBlob.getOwnShares();
+            case "ENB" -> profit = stockBlob.getLastDicPerQ() * getExchangeRateCAD() * stockBlob.getOwnShares();
+            default -> profit = stockBlob.getLastDicPerQ() * stockBlob.getOwnShares();
+        }
+        return profit;
     }
 
     public String getShareLatestNews(String shareSymbol) {

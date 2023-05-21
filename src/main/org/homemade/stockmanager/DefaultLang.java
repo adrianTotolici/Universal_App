@@ -36,6 +36,7 @@ public class DefaultLang extends org.homemade.DefaultLang {
     public static String communicationServicesLabel = Constants.sectorComboBoxList[8];
     public static String utilitiesLabel = Constants.sectorComboBoxList[9];
     public static String basicMaterialsLabel = Constants.sectorComboBoxList[10];
+    public static String dividendHistoryButton = "Dividend history";
 
     //--------------------- Detail share information panel ----------
     public static String shareInvestmentLabel = "Investment";
