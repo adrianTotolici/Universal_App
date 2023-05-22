@@ -275,6 +275,7 @@ public class Logic {
         old_stock.setInvestment(stockBlob.getInvestment());
         old_stock.setSector(stockBlob.getSector());
         old_stock.setPayDate(stockBlob.getPayDate());
+        old_stock.setName(stockBlob.getName());
 
         if (stockList.get(stockBlob.getSymbol()) != null) {
             stockList.replace(stockBlob.getSymbol(), old_stock);
@@ -472,10 +473,10 @@ public class Logic {
             JSONArray articles = jsonObject.getJSONArray("articles");
             for (int i = 0; i < articles.length(); i++) {
                 JSONObject article = articles.getJSONObject(i);
+                news.append("------------").append(article.getString("publishedAt").split("T")[0]).append("------------\n");
                 news.append(article.getString("title")).append("\n\n");
                 news.append(article.getString("description")).append("\n\n");
                 news.append(article.getString("url")).append("\n");
-                news.append("-------------\n");
                 news.append("\n");
             }
         } catch (IOException | JSONException e) {
@@ -523,7 +524,6 @@ public class Logic {
         int div_ownSharesColumnIndex = 8;
         int div_investmentColumnIndex = 7;
         int div_sectorColumnIndex = 12;
-
 
         HashMap<String, String> shareSymbolReplacement = Constants.shareSymbolReplacement;
 
