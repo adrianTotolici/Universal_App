@@ -20,6 +20,7 @@ public class DefaultLang extends org.homemade.DefaultLang {
     public static String investmentLabel = "Investment RON";
     public static String saveEditStockButtonText = "Save";
     public static String payDateLabel = "Pay Date";
+    public static String nameLabel = "Company Name";
 
     //-------------------- General share information panel ------
     public static String totalInvestmentLabel = "Total Investment";

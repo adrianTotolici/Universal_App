@@ -78,6 +78,8 @@ public class GuiStockLogic extends Component {
     private JLabel recommendedInvestmentValue;
     private JPanel pieChartPanel;
     private JButton showDivHistoryButton;
+    private JTextField nameText;
+    private JLabel nameLabel;
     private JFileChooser xmlImporter;
     private JFileChooser pathLocation;
 
@@ -192,8 +194,6 @@ public class GuiStockLogic extends Component {
                     currencySymbol = "$";
                 }
             }
-
-
 
             row[0] = stockBlob.getSymbol();
             row[1] = stockBlob.getName();
@@ -350,6 +350,7 @@ public class GuiStockLogic extends Component {
         industryLabel.setText(DefaultLang.industryLabel);
         investmentLabel.setText(DefaultLang.investmentLabel);
         editFromButton.setText(DefaultLang.saveEditStockButtonText);
+        nameLabel.setText(DefaultLang.nameLabel);
         for (int i = 0; i< Constants.sectorComboBoxList.length; i++) {
             sectorComboBox.addItem(Constants.sectorComboBoxList[i]);
         }
@@ -451,11 +452,12 @@ public class GuiStockLogic extends Component {
         Utils.Log("Load stock to be edited in Edit Form.");
         editStockPanel.setVisible(true);
         stockLabel.setText(stockBlob.getSymbol());
-        divTextFiled.setText(String.valueOf(stockBlob.getDivPerQ()));
+        divTextFiled.setText(String.valueOf(stockBlob.getLastDicPerQ()));
         ownShareTextField.setText(String.valueOf(stockBlob.getOwnShares()));
         sectorComboBox.setSelectedItem(stockBlob.getSector());
         investmentTextField.setText(Constants.dividendPayFormat.format(stockBlob.getInvestment()*Logic.getInstance().getExchangeRateRON()));
         industryComboBox.removeAllItems();
+        nameText.setText(stockBlob.getName());
 
         if (null != Constants.industryComboBoxList.get(sectorComboBox.getModel().getSelectedItem())) {
             String[] industryListSaved = Constants.industryComboBoxList.get(sectorComboBox.getModel().getSelectedItem());
@@ -485,6 +487,9 @@ public class GuiStockLogic extends Component {
 
             double investment = Double.parseDouble(investmentTextField.getText());
             stockBlob.setInvestment(investment);
+
+            String companyName = nameText.getText();
+            stockBlob.setName(companyName);
 
             Logic.getInstance().updateStock(stockBlob);
             updateStockTable(false);
