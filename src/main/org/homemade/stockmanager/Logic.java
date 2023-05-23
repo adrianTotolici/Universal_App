@@ -16,8 +16,6 @@ import yahoofinance.YahooFinance;
 import java.io.*;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +40,6 @@ public class Logic {
     private double exchangeRateEUR;
     private double exchangeRateCAD;
     private double exchangeRateGBP;
-    private final boolean development = true;
     private static String stockFilePath;
     private static String investmentFilePath;
     private String newsApiKey;
@@ -97,13 +94,13 @@ public class Logic {
     }
 
     public void getExchangeRates() {
-        exchangeRateRON = getExchangeRate(Constants.Ron);
+        exchangeRateRON = getExchangeRate(Constants.Ron, true);
         Utils.Log("Exchange rate for RON: " + exchangeRateRON);
-        exchangeRateCAD = getExchangeRate(Constants.CanadianDollar);
+        exchangeRateCAD = getExchangeRate(Constants.CanadianDollar, true);
         Utils.Log("Exchange rate for CAD: " + exchangeRateCAD);
-        exchangeRateEUR = getExchangeRate(Constants.Euro);
+        exchangeRateEUR = getExchangeRate(Constants.Euro, true);
         Utils.Log("Exchange rate for EUR: " + exchangeRateEUR);
-        exchangeRateGBP = getExchangeRate(Constants.Pounds);
+        exchangeRateGBP = getExchangeRate(Constants.Pounds, true);
         Utils.Log("Exchange rate for GBP: " + exchangeRateGBP);
     }
 
@@ -286,9 +283,9 @@ public class Logic {
         saveStock();
     }
 
-    public double getExchangeRate(String currency) {
+    public double getExchangeRate(String currency, boolean readOnly) {
 
-        if (development) {
+        if (readOnly) {
             if (currency.equals(Constants.Euro)) return Constants.EURO;
             if (currency.equals(Constants.CanadianDollar)) return Constants.CAD;
             if (currency.equals(Constants.Pounds)) return Constants.GBP;
@@ -696,5 +693,12 @@ public class Logic {
 
     private void showPopUpError(String message){
         JOptionPane.showMessageDialog(null, message, "", JOptionPane.WARNING_MESSAGE);
+    }
+
+    public void updateExchangeRates(){
+        exchangeRateRON = getExchangeRate(Constants.Ron, false);
+        exchangeRateCAD = getExchangeRate(Constants.CanadianDollar, false);
+        exchangeRateEUR = getExchangeRate(Constants.Euro, false);
+        exchangeRateGBP = getExchangeRate(Constants.Pounds, false);
     }
 }
