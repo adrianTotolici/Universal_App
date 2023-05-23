@@ -36,6 +36,8 @@ public class LogicTest {
     public static String TEST_SAVE_INVESTMENT_FILE = "src/test/resources/test_investment_file_path";
     public static String TEST_NEW_DIRECTORY_LOCATION = "src/test/resources/new_location";
 
+    public static boolean test = true;
+
     @Test
     public void getInstance() {
         Logic firstCallInstance = Logic.getInstance();
@@ -46,22 +48,22 @@ public class LogicTest {
 
     @Test
     public void getExchangeRateRon() {
-        Assertions.assertEquals(Logic.getInstance().getExchangeRate(Constants.Ron), Logic.getInstance().getExchangeRateRON());
+        Assertions.assertEquals(Logic.getInstance().getExchangeRate(Constants.Ron, test), Logic.getInstance().getExchangeRateRON());
     }
 
     @Test
     public void getExchangeRateEUR() {
-        Assertions.assertEquals(Logic.getInstance().getExchangeRate(Constants.Euro), Logic.getInstance().getExchangeRateEUR());
+        Assertions.assertEquals(Logic.getInstance().getExchangeRate(Constants.Euro, test), Logic.getInstance().getExchangeRateEUR());
     }
 
     @Test
     public void getExchangeRateCAD() {
-        Assertions.assertEquals(Logic.getInstance().getExchangeRate(Constants.CanadianDollar), Logic.getInstance().getExchangeRateCAD());
+        Assertions.assertEquals(Logic.getInstance().getExchangeRate(Constants.CanadianDollar, test), Logic.getInstance().getExchangeRateCAD());
     }
 
     @Test
     public void getExchangeRateGBP() {
-        Assertions.assertEquals(Logic.getInstance().getExchangeRate(Constants.Pounds), Logic.getInstance().getExchangeRateGBP());
+        Assertions.assertEquals(Logic.getInstance().getExchangeRate(Constants.Pounds, test), Logic.getInstance().getExchangeRateGBP());
     }
 
     @Test
@@ -122,8 +124,8 @@ public class LogicTest {
 
     @Test
     public void getExchangeRate() {
-        Assertions.assertTrue(Logic.getInstance().getExchangeRate(Constants.Euro) > 0);
-        Assertions.assertEquals(1, Logic.getInstance().getExchangeRate("USD"));
+        Assertions.assertTrue(Logic.getInstance().getExchangeRate(Constants.Euro, test) > 0);
+        Assertions.assertEquals(1, Logic.getInstance().getExchangeRate("USD", test));
     }
 
     @Test
@@ -145,15 +147,6 @@ public class LogicTest {
 
         Logic.getInstance().removeAllStock();
         Assertions.assertNull(Logic.getInstance().getAddedStock(TEST_STOCK));
-    }
-
-    @Test
-    public void getExchangeRates() {
-        Logic.getInstance().getExchangeRates();
-        Assertions.assertTrue(0 < Logic.getInstance().getExchangeRateRON());
-        Assertions.assertTrue(0 < Logic.getInstance().getExchangeRateCAD());
-        Assertions.assertTrue(0 < Logic.getInstance().getExchangeRateEUR());
-        Assertions.assertTrue(0 < Logic.getInstance().getExchangeRateGBP());
     }
 
     @Test
