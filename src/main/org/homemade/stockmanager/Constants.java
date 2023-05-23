@@ -16,15 +16,11 @@ public class Constants extends org.homemade.Constants {
     public static final String Ron = "RON";
     public static final String Pounds = "GBP";
 
-    public static final double EURO = 0.900617;
-    public static final double CAD = 1.35175;
-    public static final double RON = 4.4941;
-    public static final double GBP = 0.8049;
-
     public static String stockFilePath = "G:\\My Drive\\Universal App\\stock_file";
     public static String investmentFilePath = "G:\\My Drive\\Universal App\\investment_file";
     public static String apiKey="G:\\My Drive\\Universal App\\api_key.txt";
     public static String apiCallsDay = "G:\\My Drive\\Universal App\\api_call_day";
+    public static String stockExchange = "G:\\My Drive\\Universal App\\exchange_rate";
 
     public static final String[] columnNamesStockTable = {"Symbol", "Name", "Price", "Dividend / Quarter", "Own Shares",
             "Investment", "Profit / Quarter", "Tax", "Profit / Quarter RON"};

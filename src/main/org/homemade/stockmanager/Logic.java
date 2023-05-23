@@ -16,8 +16,6 @@ import yahoofinance.YahooFinance;
 import java.io.*;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +40,6 @@ public class Logic {
     private double exchangeRateEUR;
     private double exchangeRateCAD;
     private double exchangeRateGBP;
-    private final boolean development = true;
     private static String stockFilePath;
     private static String investmentFilePath;
     private String newsApiKey;
@@ -75,7 +72,7 @@ public class Logic {
                 Files.createFile(stockFile);
             }
             getApiKeys();
-            getExchangeRates();
+            loadExchangeRate();
             loadApiCals();
         } catch (IOException e) {
             showPopUpError(e.getMessage());
@@ -94,17 +91,6 @@ public class Logic {
             showPopUpError(e.getMessage());
             throw new RuntimeException(e);
         }
-    }
-
-    public void getExchangeRates() {
-        exchangeRateRON = getExchangeRate(Constants.Ron);
-        Utils.Log("Exchange rate for RON: " + exchangeRateRON);
-        exchangeRateCAD = getExchangeRate(Constants.CanadianDollar);
-        Utils.Log("Exchange rate for CAD: " + exchangeRateCAD);
-        exchangeRateEUR = getExchangeRate(Constants.Euro);
-        Utils.Log("Exchange rate for EUR: " + exchangeRateEUR);
-        exchangeRateGBP = getExchangeRate(Constants.Pounds);
-        Utils.Log("Exchange rate for GBP: " + exchangeRateGBP);
     }
 
     public double getExchangeRateRON() {
@@ -286,13 +272,13 @@ public class Logic {
         saveStock();
     }
 
-    public double getExchangeRate(String currency) {
+    public double getExchangeRate(String currency, boolean readOnly) {
 
-        if (development) {
-            if (currency.equals(Constants.Euro)) return Constants.EURO;
-            if (currency.equals(Constants.CanadianDollar)) return Constants.CAD;
-            if (currency.equals(Constants.Pounds)) return Constants.GBP;
-            if (currency.equals(Constants.Ron)) return Constants.RON;
+        if (readOnly) {
+            if (currency.equals(Constants.Euro)) return exchangeRateEUR;
+            if (currency.equals(Constants.CanadianDollar)) return exchangeRateCAD;
+            if (currency.equals(Constants.Pounds)) return exchangeRateGBP;
+            if (currency.equals(Constants.Ron)) return exchangeRateRON;
             if (currency.equals("USD")) return 1;
         } else {
             try {
@@ -696,5 +682,42 @@ public class Logic {
 
     private void showPopUpError(String message){
         JOptionPane.showMessageDialog(null, message, "", JOptionPane.WARNING_MESSAGE);
+    }
+
+    public void updateExchangeRates(){
+        exchangeRateRON = getExchangeRate(Constants.Ron, false);
+        exchangeRateCAD = getExchangeRate(Constants.CanadianDollar, false);
+        exchangeRateEUR = getExchangeRate(Constants.Euro, false);
+        exchangeRateGBP = getExchangeRate(Constants.Pounds, false);
+        saveExchangeRate();
+    }
+
+    private void loadExchangeRate(){
+        try {
+            File apiKeyFile = new File(Constants.stockExchange);
+            exchangeRateEUR = Double.parseDouble(FileUtils.readLines(apiKeyFile).get(0));
+            exchangeRateCAD = Double.parseDouble(FileUtils.readLines(apiKeyFile).get(1));
+            exchangeRateRON = Double.parseDouble(FileUtils.readLines(apiKeyFile).get(2));
+            exchangeRateGBP = Double.parseDouble(FileUtils.readLines(apiKeyFile).get(3));
+        } catch (IOException e) {
+            showPopUpError(e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void saveExchangeRate(){
+        try {
+            FileOutputStream fileOutputStream = new FileOutputStream(Constants.stockExchange);
+            DataOutputStream dataOutputStream = new DataOutputStream(fileOutputStream);
+
+            dataOutputStream.writeBytes(exchangeRateEUR+"\n"+exchangeRateCAD+"\n"+exchangeRateRON+"\n"+exchangeRateGBP);
+
+            dataOutputStream.close();
+            fileOutputStream.close();
+            Utils.Log("Save finance api calls with value: "+apiCallsDay);
+        } catch (IOException e) {
+            showPopUpError(e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

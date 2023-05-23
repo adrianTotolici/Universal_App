@@ -287,7 +287,7 @@ public class GuiStockLogic extends Component {
         updateExchangeRateButton.addActionListener(e -> {
             disableButtons(updateExchangeRateButton);
             Utils.Log("Update exchange rate.");
-            Logic.getInstance().getExchangeRates();
+            Logic.getInstance().updateExchangeRates();
             exchangeRonValue.setText("RON: "+Logic.getInstance().getExchangeRateRON());
             exchangeEURValue.setText("EUR: "+Logic.getInstance().getExchangeRateEUR());
             exchangeGBPValue.setText("GBP: "+Logic.getInstance().getExchangeRateGBP());
