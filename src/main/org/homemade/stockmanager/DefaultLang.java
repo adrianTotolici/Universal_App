@@ -48,4 +48,8 @@ public class DefaultLang extends org.homemade.DefaultLang {
     public static String sharePayDayLabel = "Pay day";
     public static String noNewsInfo = "No news provided for ";
     public static String recommendedInvestment = "Recommended investment";
+
+    //---------------------- Menu buttons -----------------------------
+    public static String saveDataPath = "Save data path";
+    public static String importTrading212Csv = "Import trading 212 CSV";
 }

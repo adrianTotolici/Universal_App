@@ -360,8 +360,10 @@ public class GuiStockLogic extends Component {
     public void initMenuBar(){
         JMenuBar menuBar = new JMenuBar();
         JMenu menu = new JMenu("Menu");
-        JMenuItem menuButtonSavePathData = new JMenuItem("Save data path");
+        JMenuItem menuButtonSavePathData = new JMenuItem(DefaultLang.saveDataPath);
+        JMenuItem menuButtonImportT212CSV = new JMenuItem(DefaultLang.importTrading212Csv);
         menu.add(menuButtonSavePathData);
+        menu.add(menuButtonImportT212CSV);
         menuBar.add(menu);
         toolBar.add(menuBar);
 
@@ -377,6 +379,19 @@ public class GuiStockLogic extends Component {
                 Constants.setStockFilePath(file.getAbsolutePath());
                 Logic.getInstance().saveStock();
                 Utils.Log("New stock path is: "+ Constants.stockFilePath);
+            }
+        });
+
+        menuButtonImportT212CSV.addActionListener(e->{
+            Utils.Log("Import CSV from Trading 212.");
+            pathLocation = new JFileChooser();
+            pathLocation.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            pathLocation.setCurrentDirectory(new File(Constants.stockFilePath));
+            int returnVal = pathLocation.showOpenDialog(GuiStockLogic.this);
+
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = pathLocation.getSelectedFile();
+                Logic.getInstance().importTrading212CSV(file.getAbsolutePath());
             }
         });
     }
