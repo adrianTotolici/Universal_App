@@ -725,35 +725,65 @@ public class Logic {
     }
 
     public void importTrading212CSV(String filePath){
-        List<Stock_blob> stockBlobList = new ArrayList<>();
-        List<Investment_blob> investmentBlobs = new ArrayList<>();
         try {
             List<String> allLines = Files.readAllLines(Paths.get(filePath));
             for (String line : allLines) {
                 String[] split = line.split(",");
-                if (split[0].matches("Market [a-z]+")){
-                    Stock_blob stockBlob = new Stock_blob();
-                    stockBlob.setSymbol(split[3]);
-                    stockBlob.setName(split[4].split("\"")[1].split("\"")[0]);
-                    stockBlob.setOwnShares(Double.parseDouble(split[5]));
-                    Double interimInvestment = Double.parseDouble(split[10])*Double.parseDouble(split[8]);
-                    switch (split[7]){
-                        case "EUR" ->
-                                stockBlob.setInvestment(interimInvestment*getExchangeRateEUR());
-                        case "GBX" ->
-                                stockBlob.setInvestment(interimInvestment*getExchangeRateGBP()/100);
-                        default ->
-                            stockBlob.setInvestment(interimInvestment);
+                if (split[0].matches("Market b[a-z]+")){
+                    Stock_blob stockBlob;
+                    if (getAddedStock(split[3]) != null){
+                        stockBlob = getAddedStock(split[3]);
+                        stockBlob.setOwnShares(Double.parseDouble(split[5])+stockBlob.getOwnShares());
+                        double interimInvestment = Double.parseDouble(split[10])*Double.parseDouble(split[8]);
+                        switch (split[7]){
+                            case "EUR" ->
+                                    stockBlob.setInvestment(interimInvestment*getExchangeRateEUR()+stockBlob.getInvestment());
+                            case "GBX" ->
+                                    stockBlob.setInvestment((interimInvestment*getExchangeRateGBP()/100)+stockBlob.getInvestment());
+                            default ->
+                                    stockBlob.setInvestment(interimInvestment+stockBlob.getInvestment());
+                        }
+
+                    }else {
+                        stockBlob = new Stock_blob();
+                        stockBlob.setSymbol(split[3]);
+                        stockBlob.setName(split[4].split("\"")[1].split("\"")[0]);
+                        stockBlob.setOwnShares(Double.parseDouble(split[5]));
+                        double interimInvestment = Double.parseDouble(split[10])*Double.parseDouble(split[8]);
+                        switch (split[7]){
+                            case "EUR" ->
+                                    stockBlob.setInvestment(interimInvestment*getExchangeRateEUR());
+                            case "GBX" ->
+                                    stockBlob.setInvestment(interimInvestment*getExchangeRateGBP()/100);
+                            default ->
+                                    stockBlob.setInvestment(interimInvestment);
+                        }
                     }
 
-                    stockBlobList.add(stockBlob);
+                    Investment_blob investmentBlob;
+                    if (getAddedInvestment(split[3]) != null){
+                        investmentBlob = getAddedInvestment(split[3]);
+                        investmentBlob.setInvestment(stockBlob.getInvestment(), Double.parseDouble(split[8]),
+                                Double.parseDouble(split[6]));
+                    }else {
+                        investmentBlob = new Investment_blob();
+                        investmentBlob.setStockSymbol(split[3]);
+                        investmentBlob.setInvestment(stockBlob.getInvestment(), Double.parseDouble(split[8]),
+                                Double.parseDouble(split[6]));
+                    }
 
-                    Investment_blob investmentBlob = new Investment_blob();
-                    investmentBlob.setStockSymbol(split[3]);
-                    investmentBlob.setInvestment(stockBlob.getInvestment(), Double.parseDouble(split[8]),
-                            Double.parseDouble(split[6]));
 
-                    investmentBlobs.add(investmentBlob);
+                    if (getAddedStock(split[3]) != null) {
+                        stockList.replace(stockBlob.getSymbol(), stockBlob);
+                    } else {
+                        stockList.put(stockBlob.getSymbol(), stockBlob);
+                    }
+
+                    if (getAddedInvestment(split[3]) !=null) {
+                        investmentList.replace(investmentBlob.getStockSymbol(), investmentBlob);
+                    } else {
+                        investmentList.put(investmentBlob.getStockSymbol(), investmentBlob);
+                    }
                 }
             }
         } catch (IOException e) {
