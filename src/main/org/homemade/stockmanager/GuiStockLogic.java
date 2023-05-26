@@ -393,6 +393,7 @@ public class GuiStockLogic extends Component {
                 File file = pathLocation.getSelectedFile();
                 Logic.getInstance().importTrading212CSV(file.getAbsolutePath());
             }
+            updateStockTable(true);
         });
     }
 
