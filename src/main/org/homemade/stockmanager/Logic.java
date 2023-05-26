@@ -19,10 +19,13 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -717,6 +720,99 @@ public class Logic {
             Utils.Log("Save finance api calls with value: "+apiCallsDay);
         } catch (IOException e) {
             showPopUpError(e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public void importTrading212CSV(String filePath) {
+        try {
+            List<String> allLines = Files.readAllLines(Paths.get(filePath));
+            for (String line : allLines) {
+                String[] split = line.split(",");
+                if (split[0].matches("Market b[a-z]+")) {
+                    Stock_blob stockBlob;
+                    if (getAddedStock(split[3]) != null) {
+                        stockBlob = getAddedStock(split[3]);
+                        stockBlob.setOwnShares(Double.parseDouble(split[5]) + stockBlob.getOwnShares());
+                        double interimInvestment = Double.parseDouble(split[10]) * Double.parseDouble(split[8]);
+                        switch (split[7]) {
+                            case "EUR" ->
+                                    stockBlob.setInvestment(interimInvestment * getExchangeRateEUR() + stockBlob.getInvestment());
+                            case "GBX" ->
+                                    stockBlob.setInvestment((interimInvestment * getExchangeRateGBP() / 100) + stockBlob.getInvestment());
+                            default -> stockBlob.setInvestment(interimInvestment + stockBlob.getInvestment());
+                        }
+
+                    } else {
+                        stockBlob = new Stock_blob();
+                        stockBlob.setSymbol(split[3]);
+                        stockBlob.setName(split[4].split("\"")[1].split("\"")[0]);
+                        stockBlob.setOwnShares(Double.parseDouble(split[5]));
+                        double interimInvestment = Double.parseDouble(split[10]) * Double.parseDouble(split[8]);
+                        switch (split[7]) {
+                            case "EUR" -> stockBlob.setInvestment(interimInvestment * getExchangeRateEUR());
+                            case "GBX" -> stockBlob.setInvestment(interimInvestment * getExchangeRateGBP() / 100);
+                            default -> stockBlob.setInvestment(interimInvestment);
+                        }
+                    }
+
+                    Investment_blob investmentBlob;
+                    if (getAddedInvestment(split[3]) != null) {
+                        investmentBlob = getAddedInvestment(split[3]);
+                        investmentBlob.setInvestment(stockBlob.getInvestment(), Double.parseDouble(split[8]),
+                                Double.parseDouble(split[6]));
+                    } else {
+                        investmentBlob = new Investment_blob();
+                        investmentBlob.setStockSymbol(split[3]);
+                        investmentBlob.setInvestment(stockBlob.getInvestment(), Double.parseDouble(split[8]),
+                                Double.parseDouble(split[6]));
+                    }
+
+
+                    if (getAddedStock(split[3]) != null) {
+                        stockList.replace(stockBlob.getSymbol(), stockBlob);
+                    } else {
+                        stockList.put(stockBlob.getSymbol(), stockBlob);
+                    }
+
+                    if (getAddedInvestment(split[3]) != null) {
+                        investmentList.replace(investmentBlob.getStockSymbol(), investmentBlob);
+                    } else {
+                        investmentList.put(investmentBlob.getStockSymbol(), investmentBlob);
+                    }
+                } else {
+                    if (split[0].matches("Market s[a-z]+")) {
+                        Stock_blob stockBlob;
+                        Investment_blob investmentBlob;
+                        if (getAddedStock(split[3]) != null) {
+                            stockBlob = getAddedStock(split[3]);
+                            stockBlob.setOwnShares(stockBlob.getOwnShares() - Double.parseDouble(split[5]));
+                            if (stockBlob.getOwnShares() <= 0) {
+                                stockList.remove(split[3]);
+                                investmentList.remove(split[3]);
+                            } else {
+                                double interimInvestment = Double.parseDouble(split[10]) * Double.parseDouble(split[8]);
+                                switch (split[7]) {
+                                    case "EUR" ->
+                                            stockBlob.setInvestment(stockBlob.getInvestment() - interimInvestment * getExchangeRateEUR());
+                                    case "GBX" ->
+                                            stockBlob.setInvestment(stockBlob.getInvestment() - (interimInvestment * getExchangeRateGBP() / 100));
+                                    default -> stockBlob.setInvestment(stockBlob.getInvestment() - interimInvestment);
+                                }
+
+                                if (getAddedInvestment(split[3]) != null) {
+                                    investmentBlob = getAddedInvestment(split[3]);
+                                    investmentBlob.setInvestment(stockBlob.getInvestment()*(-1), Double.parseDouble(split[8]),
+                                            Double.parseDouble(split[6]));
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            saveStock();
+            saveInvestment();
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
