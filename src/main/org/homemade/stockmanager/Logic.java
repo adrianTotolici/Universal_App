@@ -611,10 +611,6 @@ public class Logic {
         saveInvestment();
     }
 
-    private double computeMediumInvestment(String shareSymbol){
-
-    }
-
     public double computeNecessaryInvestment(String shareSymbol) {
         double necessaryInvestment;
         Investment_blob addedInvestment = getAddedInvestment(shareSymbol);
