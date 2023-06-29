@@ -1,6 +1,7 @@
 package org.homemade.main;
 
 import org.homemade.Utils;
+import org.homemade.services.ServicesLogic;
 import org.homemade.stockmanager.GuiStockLogic;
 
 import javax.swing.*;
@@ -12,6 +13,7 @@ public class MainGuiLogic {
     private JButton exitButton;
     private JButton stockButton;
     private JPanel mainMenuPanel;
+    private JButton stockServiceButton;
 
     public static MainGuiLogic getInstance(JFrame jFrame){
         if (instance == null){
@@ -29,6 +31,7 @@ public class MainGuiLogic {
 
         exitButton.setText(DefaultLang.exitButtonText);
         stockButton.setText(DefaultLang.stockManagerButtonText);
+        stockServiceButton.setText(DefaultLang.stockServiceButtonText);
 
         Utils.Log("(Main Menu) Remove all JPanel from JFrame.");
         jFrame.getContentPane().removeAll();
@@ -48,6 +51,10 @@ public class MainGuiLogic {
         stockButton.addActionListener(e -> {
             Utils.Log("(Main Menu) Call Stock_blob manager gui");
             GuiStockLogic.getInstance(jFrame).init();
+        });
+        stockServiceButton.addActionListener(e -> {
+            Utils.Log("(Main Menu) Call stock background services");
+            ServicesLogic.getInstance().callBackgroundService(jFrame);
         });
     }
 }
